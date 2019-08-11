@@ -4,14 +4,14 @@
 ### Do not forget to adjust the following variables to your own plugin.
 
 # The plugin's identifier, has to be unique
-plugin_identifier = "ikea-tradfri"
+plugin_identifier = "ikea_tradfri"
 
 # The plugin's python package, should be "octoprint_<plugin identifier>", has to be unique
-plugin_package = "octoprint_ikea-tradfri"
+plugin_package = "octoprint_ikea_tradfri"
 
 # The plugin's human readable name. Can be overwritten within OctoPrint's internal data via __plugin_name__ in the
 # plugin module
-plugin_name = "OctoPrint-Ikea-tradfri"
+plugin_name = "OctoPrint-Ikea_tradfri"
 
 # The plugin's version. Can be overwritten within OctoPrint's internal data via __plugin_version__ in the plugin module
 plugin_version = "0.1.0"
@@ -21,7 +21,7 @@ plugin_version = "0.1.0"
 plugin_description = """Control Ikea Tradfri outlet from Octoprint"""
 
 # The plugin's author. Can be overwritten within OctoPrint's internal data via __plugin_author__ in the plugin module
-plugin_author = "Mathieu "ralmn" HIREL"
+plugin_author = "Mathieu \"ralmn\" HIREL"
 
 # The plugin's author's mail address.
 plugin_author_email = "me@rlm.pw"
