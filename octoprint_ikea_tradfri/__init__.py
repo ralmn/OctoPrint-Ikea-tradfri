@@ -13,12 +13,13 @@ import sys
 import os
 import json
 
-import uuid 
+import uuid
 
 
 global coap
 coap = '/usr/local/bin/coap-client'
 userId = str(uuid.uuid1())[:8]
+
 
 class IkeaTradfriPlugin(
         octoprint.plugin.SimpleApiPlugin,
@@ -38,49 +39,51 @@ class IkeaTradfriPlugin(
         tradfriHub = 'coaps://{}:5684/{}' .format(gateway_ip, "15011/9063")
         self._logger.info(security_code)
         self._logger.info(userId)
-        api = '{} -m post -e {} -u "Client_identity" -k "{}" "{}"' .format(coap, "'{ \"9090\":\""+userId+"\" }'", security_code, tradfriHub)
+        api = '{} -m post -e {} -u "Client_identity" -k "{}" "{}"' .format(
+            coap, "'{ \"9090\":\""+userId+"\" }'", security_code, tradfriHub)
         self._logger.info(api)
         if os.path.exists(coap):
             result = os.popen(api)
         else:
             sys.stderr.write('[-] libcoap: could not find libcoap.\n')
             sys.exit(1)
-        
+
         data = json.loads(result.read().strip('\n'))
         self._logger.info(data)
         return data['9091']
 
     def run_gateway_get_request(self, path):
         gateway_ip = self._settings.get(["gateway_ip"])
-        if(self.psk == None): 
+        if(self.psk == None):
             self.psk = self.auth()
-        
+
         tradfriHub = 'coaps://{}:5684/{}' .format(gateway_ip, path)
         api = '{} -m get -u "{}" -k "{}" "{}"' .format(coap, userId, self.psk,
-                                                                                        tradfriHub)
+                                                       tradfriHub)
 
         if os.path.exists(coap):
             result = os.popen(api)
         else:
             sys.stderr.write('[-] libcoap: could not find libcoap.\n')
             sys.exit(1)
-            
+
         return json.loads(result.read().strip('\n'))
 
     def run_gateway_put_request(self, path, data):
         gateway_ip = self._settings.get(["gateway_ip"])
-        if(self.psk == None): 
+        if(self.psk == None):
             self.psk = self.auth()
 
         tradfriHub = 'coaps://{}:5684/{}' .format(gateway_ip, path)
-        api = '{} -m put -e \'{}\' -u "{}" -k "{}" "{}"' .format(coap, data, userId, self.psk, tradfriHub)                                                           
+        api = '{} -m put -e \'{}\' -u "{}" -k "{}" "{}"' .format(
+            coap, data, userId, self.psk, tradfriHub)
         self._logger.info(api)
         if os.path.exists(coap):
             result = os.popen(api)
         else:
             sys.stderr.write('[-] libcoap: could not find libcoap.\n')
             sys.exit(1)
-            
+
         return
 
     def loadDevices(self):
@@ -91,12 +94,13 @@ class IkeaTradfriPlugin(
             devices = self.run_gateway_get_request('15001')
             self.devices = []
             for i in range(len(devices)):
-                #self._logger.info(devices[i])
-                dev = self.run_gateway_get_request('15001/{}'.format(devices[i]));
-                #self._logger.info(dev);
+                # self._logger.info(devices[i])
+                dev = self.run_gateway_get_request(
+                    '15001/{}'.format(devices[i]))
+                # self._logger.info(dev);
                 if '3312' in dev:
                     self.devices.append((devices[i], dev['9001']))
-            
+
         else:
             self._logger.info("No security code or gateway ip")
 
@@ -106,7 +110,7 @@ class IkeaTradfriPlugin(
 
     def on_settings_save(self, data):
         octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
-        self._logger.info(data);
+        self._logger.info(data)
         self.loadDevices()
 
     def on_after_startup(self):
@@ -170,25 +174,25 @@ class IkeaTradfriPlugin(
         )
 
     def turnOn(self):
-        self.run_gateway_put_request('/15001/{}'.format(self._settings.get(['selected_outlet'])), '{ "3312": [{ "5850": 1 }] }')
+        self.run_gateway_put_request(
+            '/15001/{}'.format(self._settings.get(['selected_outlet'])), '{ "3312": [{ "5850": 1 }] }')
 
     def turnOff(self):
-        self.run_gateway_put_request('/15001/{}'.format(self._settings.get(['selected_outlet'])), '{ "3312": [{ "5850": 0 }] }')
+        self.run_gateway_put_request(
+            '/15001/{}'.format(self._settings.get(['selected_outlet'])), '{ "3312": [{ "5850": 0 }] }')
 
-    
     def get_api_commands(self):
         return dict(
             turnOn=[], turnOff=[]
         )
-    
+
     def on_api_command(self, command, data):
         import flask
         if command == "turnOn":
             self.turnOn()
         elif command == "turnOff":
             self.turnOff()
-    
-    
+
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
