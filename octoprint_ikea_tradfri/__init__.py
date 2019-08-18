@@ -30,6 +30,8 @@ class IkeaTradfriPlugin(
 
     psk = None
     devices = []
+    status = 'waiting'
+    error_message = ''
 
     def auth(self):
         gateway_ip = self._settings.get(["gateway_ip"])
@@ -37,25 +39,41 @@ class IkeaTradfriPlugin(
         security_code = "qtSikEFSZiF62Gv3"
         """ function for getting all tradfri device ids """
         tradfriHub = 'coaps://{}:5684/{}' .format(gateway_ip, "15011/9063")
-        self._logger.info(security_code)
-        self._logger.info(userId)
         api = '{} -m post -e {} -u "Client_identity" -k "{}" "{}"' .format(
             coap, "'{ \"9090\":\""+userId+"\" }'", security_code, tradfriHub)
-        self._logger.info(api)
+        # self._logger.info(api)
         if os.path.exists(coap):
             result = os.popen(api)
         else:
             sys.stderr.write('[-] libcoap: could not find libcoap.\n')
             sys.exit(1)
+            self.status = 'connection_failled'
+            self.error_message = 'libcoap: could not find libcoap'
+            self.save_settings()
 
-        data = json.loads(result.read().strip('\n'))
-        self._logger.info(data)
-        return data['9091']
+        try:
+            data = json.loads(result.read().strip('\n'))
+            return data['9091']
+        except:
+            self._logger.error('Fail to connect')
+            return None
+
+    def save_settings(self):
+        self._settings.set(['status'], self.status)
+        self._settings.set(['error_message'], self.error_message)
+        self._settings.set(['devices'], self.devices)
+        self._settings.save()
+        self._logger.info('Settings saved')
+        self._logger.info(self._settings.get(['status']))
 
     def run_gateway_get_request(self, path):
         gateway_ip = self._settings.get(["gateway_ip"])
-        if(self.psk == None):
+        if self.psk is None:
             self.psk = self.auth()
+        if self.psk is None:
+            self.status = 'connection_failled'
+            self.save_settings()
+            return None
 
         tradfriHub = 'coaps://{}:5684/{}' .format(gateway_ip, path)
         api = '{} -m get -u "{}" -k "{}" "{}"' .format(coap, userId, self.psk,
@@ -73,25 +91,28 @@ class IkeaTradfriPlugin(
         gateway_ip = self._settings.get(["gateway_ip"])
         if(self.psk == None):
             self.psk = self.auth()
-
+        if self.psk is None:
+            return None
         tradfriHub = 'coaps://{}:5684/{}' .format(gateway_ip, path)
-        api = '{} -m put -e \'{}\' -u "{}" -k "{}" "{}"' .format(
+        api = '{} -m put -e \'{}\' -u "{}" -k "{}" "{}" 2>/dev/null' .format(
             coap, data, userId, self.psk, tradfriHub)
-        self._logger.info(api)
+        # self._logger.info(api)
         if os.path.exists(coap):
             result = os.popen(api)
         else:
             sys.stderr.write('[-] libcoap: could not find libcoap.\n')
             sys.exit(1)
 
-        return
+        return True
 
-    def loadDevices(self):
+    def loadDevices(self, startup=False):
         gateway_ip = self._settings.get(["gateway_ip"])
         security_code = self._settings.get(["security_code"])
         if gateway_ip != "" and security_code != "":
             self._logger.info('load devices')
             devices = self.run_gateway_get_request('15001')
+            if devices is None:
+                return
             self.devices = []
             for i in range(len(devices)):
                 # self._logger.info(devices[i])
@@ -99,22 +120,21 @@ class IkeaTradfriPlugin(
                     '15001/{}'.format(devices[i]))
                 # self._logger.info(dev);
                 if '3312' in dev:
-                    self.devices.append((devices[i], dev['9001']))
-
+                    self.devices.append(dict(id=devices[i], name=dev['9001']))
+            if len(self.devices):
+                self.status = 'ok'
+            else:
+                self.status = 'no_devices'
         else:
             self._logger.info("No security code or gateway ip")
-
-    def scan_outlet(self):
-        if self.coap_client == None:
-            return
+        self.save_settings()
 
     def on_settings_save(self, data):
         octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
-        self._logger.info(data)
         self.loadDevices()
 
     def on_after_startup(self):
-        self.loadDevices()
+        self.loadDevices(startup=True)
 
     # ~~ SettingsPlugin mixin
 
@@ -122,23 +142,26 @@ class IkeaTradfriPlugin(
         return dict(
             # put your plugin's default settings here
             security_code="",
-            gateway_ip="127.0.0.1",
+            gateway_ip="",
             psk="",
-            selected_outlet=-1
-
+            selected_outlet=None,
+            status='',
+            error_message='',
+            devices=[]
         )
 
     # ~~ TemplatePlugin mixin
 
     def get_template_configs(self):
         return [
-            dict(type="navbar", custom_bindings=False, classes=["dropdown"]),
-            dict(type="settings", custom_bindings=False)
+            dict(type="navbar", custom_bindings=True, classes=["dropdown"]),
+            dict(type="settings", custom_bindings=True)
         ]
 
     def get_template_vars(self):
         return dict(
-            devices=self.devices
+            devices=self.devices,
+            status=self.status
         )
     # ~~ AssetPlugin mixin
 
@@ -192,6 +215,12 @@ class IkeaTradfriPlugin(
             self.turnOn()
         elif command == "turnOff":
             self.turnOff()
+        elif commad == "loadSettings":
+            return dict(
+                status=self.status,
+                devices=self.devices,
+                error_message=self.error_message
+            )
 
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py

@@ -1,8 +1,8 @@
-<a href="javascript:void(0)" title="Ikea Tradfri" class="dropdown-toggle" data-toggle="dropdown">
+<a href="javascript:void(0)" title="Ikea Tradfri" class="dropdown-toggle" data-toggle="dropdown" data-bind="visible: canDisplayNavbar()">
     <i class="fa fa-plug"></i>
     <b class="caret"></b>
 </a>
 <ul class="dropdown-menu">
-    <li><a class="action_plugin_ikea_tradfri" href="javascript:void(0)" data-bind="click: $root.turnOn">Turn on outlet</a></li>
-    <li><a  class="action_plugin_ikea_tradfri" href="javascript:void(0)" data-bind="click: $root.turnOff">Turn off outlet</a></li>
+    <li><a class="action_plugin_ikea_tradfri" href="javascript:void(0)" data-bind="click: turnOn">Turn on outlet</a></li>
+    <li><a  class="action_plugin_ikea_tradfri" href="javascript:void(0)" data-bind="click: turnOff">Turn off outlet</a></li>
 </ul>
