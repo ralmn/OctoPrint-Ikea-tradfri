@@ -1,4 +1,4 @@
 include README.md
-recursive-include octoprint_ikea-tradfri/templates *
-recursive-include octoprint_ikea-tradfri/translations *
-recursive-include octoprint_ikea-tradfri/static *
+recursive-include OctoPrint-Ikea-tradfri/templates *
+recursive-include OctoPrint-Ikea-tradfri/translations *
+recursive-include OctoPrint-Ikea-tradfri/static *

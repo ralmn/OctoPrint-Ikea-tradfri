@@ -192,7 +192,7 @@ class IkeaTradfriPlugin(
                 current=self._plugin_version,
 
                 # update method: pip
-                pip="https://github.com/ralmn/OctoPrint_Ikea-tradfri/archive/{target_version}.zip"
+                pip="https://github.com/ralmn/OctoPrint-Ikea-tradfri/archive/{target_version}.zip"
             )
         )
 
