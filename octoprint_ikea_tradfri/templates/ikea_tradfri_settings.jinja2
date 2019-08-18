@@ -1,28 +1,45 @@
-<form class="form-horizontal">
+<form class="form-horizontal" id="form_ikea_tradfri">
     <div class="control-group">
         <label class="control-label">{{ _('Ikea Gateway IP') }}</label>
         <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: settings.plugins.ikea_tradfri.gateway_ip">
+            <input type="text" class="input-block-level" data-bind="value: settings.settings.plugins.ikea_tradfri.gateway_ip">
         </div>
     </div>
     <div class="control-group">
         <label class="control-label">{{ _('Ikea Gateway Security Code') }}</label>
         <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: settings.plugins.ikea_tradfri.security_code">
+            <input type="text" class="input-block-level" data-bind="value: settings.settings.plugins.ikea_tradfri.security_code">
         </div>
     </div>
-    <div class="control-group" data-bind="">
+    
+
+    <div class="control-group" data-bind="visible: statusOk() ">
         <label class="control-label">{{ _('Printer outlet') }}</label>
-        <div class="controls">
-            <!-- <input type="text" class="input-block-level" data-bind="value: settings.plugins.ikea_tradfri.security_code"> -->
-            <select data-bind="value: settings.plugins.ikea_tradfri.selected_outlet">
-                {% for dev in plugin_ikea_tradfri_devices %}
-                        <option value="{{ dev[0] }}">{{ dev[1] }}</option>
-                    {% endfor %}
-                    
+        <div class="controls">  
+            <select data-bind="optionsCaption: 'Choose...', value: settings.settings.plugins.ikea_tradfri.selected_outlet, optionsText: 'name', optionsValue: 'id', options: settings.settings.plugins.ikea_tradfri.devices">
+                
             </select>
         </div>
     </div>
+    
+    
+
+    
+    <p data-bind="visible: statusNoDevices()"> Successfully connected with your Ikea Gateway but <strong>no outlet found</strong>. Save for rescan </p>
+
+    <p data-bind="visible: statusFailConnection()"> Connection error with  your Ikea Gateway. Save for retry </p>
+
+
+    <div data-bind="visible: statusWaiting()">
+        <p><strong>Setup instructions</strong></p>
+        <ol> 
+            <li>Set gateway's ip and security</li>
+            <li>Save settings</li>
+            <li>Indicate your outlet</li>
+        </ol>   
+    </div>
+    
+
 </form>
  
                 
