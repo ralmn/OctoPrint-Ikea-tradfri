@@ -1,14 +1,13 @@
 ---
 layout: plugin
 
-id: ikea-tradfri
-title: OctoPrint-Ikea-tradfri
-description: Control Ikea Tradfri outlet from Octoprint
+id: ikea_tradfri
+title: Ikea Tradfri
+description: Control Ikea Tradfri outlet
 author: Mathieu "ralmn" HIREL
 license: AGPLv3
 
-# TODO
-date: today's date in format YYYY-MM-DD, e.g. 2015-04-21
+date: 2019-08-18
 
 homepage: https://github.com/ralmn/OctoPrint-Ikea-tradfri
 source: https://github.com/ralmn/OctoPrint-Ikea-tradfri
@@ -19,28 +18,22 @@ archive: https://github.com/ralmn/OctoPrint-Ikea-tradfri/archive/master.zip
 # library versions not yet published on PyPi. SHOULD ONLY BE USED IF THERE IS NO OTHER OPTION!
 #follow_dependency_links: false
 
-# TODO
 tags:
-- a list
-- of tags
-- that apply
-- to your plugin
-- (take a look at the existing plugins for what makes sense here)
+- ikea
+- tradfri
+- outlet
 
 # TODO
 screenshots:
-- url: url of a screenshot, /assets/img/...
-  alt: alt-text of a screenshot
-  caption: caption of a screenshot
-- url: url of another screenshot, /assets/img/...
-  alt: alt-text of another screenshot
-  caption: caption of another screenshot
-- ...
+- url: /assets/img/plugins/ikea_tradfri/navbar.png
+  alt: Navbar of plugin
+  caption: Navbar of plugin
+- url: /assets/img/plugins/ikea_tradfri/settings.png
+  alt: Settings of plugin
+  caption: Settings of plugin
 
-# TODO
-featuredimage: url of a featured image for your plugin, /assets/img/...
+featuredimage: /assets/img/plugins/ikea_tradfri/navbar.png
 
-# TODO
 # You only need the following if your plugin requires specific OctoPrint versions or
 # specific operating systems to function - you can safely remove the whole
 # "compatibility" block if this is not the case.
@@ -58,7 +51,7 @@ compatibility:
   # OctoPrint versions being supported.
 
   octoprint:
-  - 1.2.0
+  - 1.3.1
 
   # List of compatible operating systems
   #
@@ -85,5 +78,38 @@ compatibility:
 
 ---
 
-**TODO**: Longer description of your plugin, configuration examples etc. This part will be visible on the page at
-http://plugins.octoprint.org/plugin/ikea-tradfri/
+Turn on your printer with Ikea Tradfri Outlet.
+
+## Requierements
+
+1. [Ikea Tradfri Gateway](https://www.ikea.com/us/en/catalog/products/00337813/)
+2. [Ikea Tradfri Outlet](https://www.ikea.com/us/en/catalog/products/30356169/)
+
+## Setup
+
+## Install libcoap
+
+You need libcoap for communicate with your Ikea Gateway.
+
+    git clone --recursive https://github.com/obgm/libcoap.git
+    cd libcoap
+    git checkout dtls
+    git submodule update --init --recursive
+    ./autogen.sh
+    ./configure --disable-documentation --disable-shared
+    make
+    make install
+
+## Install plugin
+
+Install manually using this URL:
+
+    https://github.com/ralmn/OctoPrint-Ikea-tradfri/archive/master.zip
+
+
+## Configuration
+
+1. Indicate your gateway ip and your security code (found under your gateway)
+2. Save
+3. Select your outlet
+4. Save
