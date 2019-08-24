@@ -151,7 +151,8 @@ class IkeaTradfriPlugin(
             devices=[],
             on_done=True,
             on_failed=True,
-            connection_timer=5
+            connection_timer=5,
+            stop_timer=30
         )
 
     # ~~ TemplatePlugin mixin
@@ -202,9 +203,19 @@ class IkeaTradfriPlugin(
 
     def on_event(self, event, payload):
         if event == 'PrintDone' and self._settings.get_boolean(['on_done']):
-            self.turnOff()
+            stop_timer=int( self._settings.get(['stop_timer']) )
+            if stop_timer >= -1:
+                c = threading.Timer(stop_timer,self.turnOff)
+                c.start()
+            else:
+                self.turnOff()
         if event == 'PrintFailed' and self._settings.get_boolean(['on_failed']):
-            self.turnOff()
+            stop_timer=int( self._settings.get(['stop_timer']) )
+            if stop_timer >= -1:
+                c = threading.Timer(stop_timer,self.turnOff)
+                c.start()
+            else:
+                self.turnOff()
         
 
     def turnOn(self):
@@ -216,6 +227,7 @@ class IkeaTradfriPlugin(
             c.start()
 
     def turnOff(self):
+        self._logger.info('stop')
         self.run_gateway_put_request(
             '/15001/{}'.format(self._settings.get(['selected_outlet'])), '{ "3312": [{ "5850": 0 }] }')
 
