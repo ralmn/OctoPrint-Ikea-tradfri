@@ -1,4 +1,7 @@
 <form class="form-horizontal" id="form_ikea_tradfri">
+
+    <h1>General configuration</h1>
+
     <div class="control-group">
         <label class="control-label">{{ _('Ikea Gateway IP') }}</label>
         <div class="controls">
@@ -20,6 +23,7 @@
                 
             </select>
         </div>
+
     </div>
     
     
@@ -39,6 +43,36 @@
         </ol>   
     </div>
     
+    <div data-bind="visible: statusOk() ">
+
+        <h1>Event configuration</h1>
+
+        <div class="control-group">
+            <label class="control-label">{{ _('Stop outlet when print done') }}</label>
+            <div class="controls">
+                <input type="checkbox" id="plugins_ikea_tradfri_on_done" class="input-block-level" data-bind="checked: settings.settings.plugins.ikea_tradfri.on_done">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label">{{ _('Stop outlet when print failled') }}</label>
+            <div class="controls">
+                <input type="checkbox" id="plugins_ikea_tradfri_on_failed" class="input-block-level" data-bind="checked: settings.settings.plugins.ikea_tradfri.on_failed">
+            </div>
+        </div>
+
+        <h1>Auto connect</h1>
+
+        <div class="control-group">
+            <label class="control-label">{{ _('Delay for auto connect (in seconds)') }}</label>
+            <div class="controls">
+                <input type="number" min="-1" class="input-block-level" data-bind="value: settings.settings.plugins.ikea_tradfri.connection_timer">
+                <p><small>-1 for disabled</small></p>
+            </div>
+        </div>
+
+    </div>
+
 
 </form>
  

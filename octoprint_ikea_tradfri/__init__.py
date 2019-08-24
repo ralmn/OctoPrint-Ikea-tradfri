@@ -12,7 +12,7 @@ import octoprint.plugin
 import sys
 import os
 import json
-
+import threading
 import uuid
 
 
@@ -22,6 +22,7 @@ userId = str(uuid.uuid1())[:8]
 
 
 class IkeaTradfriPlugin(
+        octoprint.plugin.EventHandlerPlugin,
         octoprint.plugin.SimpleApiPlugin,
         octoprint.plugin.StartupPlugin,
         octoprint.plugin.SettingsPlugin,
@@ -147,7 +148,10 @@ class IkeaTradfriPlugin(
             selected_outlet=None,
             status='',
             error_message='',
-            devices=[]
+            devices=[],
+            on_done=True,
+            on_failed=True,
+            connection_timer=5
         )
 
     # ~~ TemplatePlugin mixin
@@ -196,9 +200,20 @@ class IkeaTradfriPlugin(
             )
         )
 
+    def on_event(self, event, payload):
+        if event == 'PrintDone' and self._settings.get_boolean(['on_done']):
+            self.turnOff()
+        if event == 'PrintFailed' and self._settings.get_boolean(['on_failed']):
+            self.turnOff()
+        
+
     def turnOn(self):
         self.run_gateway_put_request(
             '/15001/{}'.format(self._settings.get(['selected_outlet'])), '{ "3312": [{ "5850": 1 }] }')
+        connection_timer=int( self._settings.get(['connection_timer']) )
+        if connection_timer >= -1:
+            c = threading.Timer(connection_timer,self._printer.connect)
+            c.start()
 
     def turnOff(self):
         self.run_gateway_put_request(
