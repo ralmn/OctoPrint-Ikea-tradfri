@@ -37,7 +37,7 @@ class IkeaTradfriPlugin(
     def auth(self):
         gateway_ip = self._settings.get(["gateway_ip"])
         security_code = self._settings.get(["security_code"])
-        
+
         """ function for getting all tradfri device ids """
         tradfriHub = 'coaps://{}:5684/{}' .format(gateway_ip, "15011/9063")
         api = '{} -m post -e {} -u "Client_identity" -k "{}" "{}"' .format(
@@ -46,11 +46,11 @@ class IkeaTradfriPlugin(
         if os.path.exists(coap):
             result = os.popen(api)
         else:
-            sys.stderr.write('[-] libcoap: could not find libcoap.\n')
-            sys.exit(1)
+            self._logger.error('[-] libcoap: could not find libcoap.\n')
             self.status = 'connection_failled'
             self.error_message = 'libcoap: could not find libcoap'
             self.save_settings()
+            return None
 
         try:
             data = json.loads(result.read().strip('\n'))
@@ -83,8 +83,7 @@ class IkeaTradfriPlugin(
         if os.path.exists(coap):
             result = os.popen(api)
         else:
-            sys.stderr.write('[-] libcoap: could not find libcoap.\n')
-            sys.exit(1)
+            self._logger.error('[-] libcoap: could not find libcoap.\n')
 
         return json.loads(result.read().strip('\n'))
 
@@ -101,8 +100,7 @@ class IkeaTradfriPlugin(
         if os.path.exists(coap):
             result = os.popen(api)
         else:
-            sys.stderr.write('[-] libcoap: could not find libcoap.\n')
-            sys.exit(1)
+            self._logger.error('[-] libcoap: could not find libcoap.\n')
 
         return True
 
