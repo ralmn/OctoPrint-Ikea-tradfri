@@ -14,6 +14,8 @@ import os
 import json
 import threading
 import uuid
+from sarge import capture_stdout
+
 
 userId = str(uuid.uuid1())[:8]
 
@@ -42,7 +44,8 @@ class IkeaTradfriPlugin(
             coap_path, "'{ \"9090\":\""+userId+"\" }'", security_code, tradfriHub)
         # self._logger.info(api)
         if os.path.exists(coap_path):
-            result = os.popen(api)
+            p = capture_stdout(api)
+            result = p.stdout.text
         else:
             self._logger.error('[-] libcoap: could not find libcoap.\n')
             self.status = 'connection_failled'
@@ -51,7 +54,7 @@ class IkeaTradfriPlugin(
             return None
 
         try:
-            data = json.loads(result.read().strip('\n'))
+            data = json.loads(result.strip('\n'))
             return data['9091']
         except json.decoder.JSONDecodeError as e:
             self._logger.error('Fail to connect')
@@ -82,11 +85,12 @@ class IkeaTradfriPlugin(
                                                        tradfriHub)
 
         if os.path.exists(coap_path):
-            result = os.popen(api)
+            p = capture_stdout(api)
+            result = p.stdout.text
         else:
             self._logger.error('[-] libcoap: could not find libcoap.\n')
 
-        return json.loads(result.read().strip('\n'))
+        return json.loads(result.strip('\n'))
 
     def run_gateway_put_request(self, path, data):
         gateway_ip = self._settings.get(["gateway_ip"])
@@ -101,7 +105,8 @@ class IkeaTradfriPlugin(
             coap_path, data, userId, self.psk, tradfriHub)
         # self._logger.info(api)
         if os.path.exists(coap_path):
-            result = os.popen(api)
+            p = capture_stdout(api)
+            result = p.stdout.text
         else:
             self._logger.error('[-] libcoap: could not find libcoap.\n')
 
