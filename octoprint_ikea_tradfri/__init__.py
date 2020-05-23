@@ -9,12 +9,16 @@ from __future__ import absolute_import
 #
 # Take a look at the documentation on what other plugin mixins are available.
 import octoprint.plugin
+from octoprint.access import ADMIN_GROUP
+from octoprint.access.permissions import Permissions
+
 import sys
 import os
 import json
 import threading
 import uuid
 from sarge import capture_stdout
+from flask_babel import gettext
 
 
 userId = str(uuid.uuid1())[:8]
@@ -167,7 +171,7 @@ class IkeaTradfriPlugin(
     def get_template_configs(self):
         return [
             dict(type="navbar", custom_bindings=True, classes=["dropdown"]),
-            dict(type="settings", custom_bindings=True)
+            dict(type="settings", custom_bindings=True, data_bind="visible: settings.loginState.hasPermission(settings.access.permissions.PLUGIN_IKEA_TRADFRI_ADMIN)")
         ]
 
     def get_template_vars(self):
@@ -255,6 +259,14 @@ class IkeaTradfriPlugin(
                 devices=self.devices,
                 error_message=self.error_message
             )
+    def get_additional_permissions(self):
+        return [
+            dict(key="ADMIN",
+                 name="Admin",
+                 description=gettext("Allow user to set config."),
+                 default_groups=[ADMIN_GROUP],
+                 roles=["admins"])
+        ]
 
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
@@ -269,5 +281,6 @@ def __plugin_load__():
 
     global __plugin_hooks__
     __plugin_hooks__ = {
-        "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information
+        "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
+        "octoprint.access.permissions": __plugin_implementation__.get_additional_permissions
     }
