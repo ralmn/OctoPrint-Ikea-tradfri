@@ -1,94 +1,104 @@
-<form class="form-horizontal" id="form_ikea_tradfri">
+<div id="form_ikea_tradfri">
+    <div data-bind="visible: settings.loginState.hasPermission(settings.access.permissions.PLUGIN_IKEA_TRADFRI_ADMIN)">
+        <form class="form-horizontal">
+        
 
-    <h1>General configuration</h1>
+            <h1>General configuration</h1>
 
-    <div class="control-group">
-        <label class="control-label">{{ _('Ikea Gateway IP') }}</label>
-        <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: settings.settings.plugins.ikea_tradfri.gateway_ip">
-        </div>
-    </div>
-    <div class="control-group">
-        <label class="control-label">{{ _('Ikea Gateway Security Code') }}</label>
-        <div class="controls">
-            <input type="password" class="input-block-level" data-bind="value: settings.settings.plugins.ikea_tradfri.security_code">
-        </div>
-    </div>
-
-    <div class="control-group">
-        <label class="control-label">{{ _('Ikea Gateway Coap bin path') }}</label>
-        <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: settings.settings.plugins.ikea_tradfri.coap_path">
-        </div>
-    </div>
-    
-
-    <div class="control-group" data-bind="visible: statusOk() ">
-        <label class="control-label">{{ _('Printer outlet') }}</label>
-        <div class="controls">  
-            <select data-bind="optionsCaption: 'Choose...', value: settings.settings.plugins.ikea_tradfri.selected_outlet, optionsText: 'name', optionsValue: 'id', options: settings.settings.plugins.ikea_tradfri.devices">
-                
-            </select>
-        </div>
-
-    </div>
-    
-    
-
-    
-    <p data-bind="visible: statusNoDevices()"> Successfully connected with your Ikea Gateway but <strong>no outlet found</strong>. Save for rescan </p>
-
-    <p data-bind="visible: statusFailConnection()"> Connection error with  your Ikea Gateway. Save for retry </p>
-
-
-    <div data-bind="visible: statusWaiting()">
-        <p><strong>Setup instructions</strong></p>
-        <ol> 
-            <li>Set gateway's ip and security</li>
-            <li>Save settings</li>
-            <li>Indicate your outlet</li>
-        </ol>   
-    </div>
-    
-    <div data-bind="visible: statusOk() ">
-
-        <h1>Event configuration</h1>
-
-        <div class="control-group">
-            <label class="control-label">{{ _('Stop outlet when print done') }}</label>
-            <div class="controls">
-                <input type="checkbox" id="plugins_ikea_tradfri_on_done" class="input-block-level" data-bind="checked: settings.settings.plugins.ikea_tradfri.on_done">
+            <div class="control-group">
+                <label class="control-label">{{ _('Ikea Gateway IP') }}</label>
+                <div class="controls">
+                    <input type="text" class="input-block-level" data-bind="value: settings.settings.plugins.ikea_tradfri.gateway_ip">
+                </div>
             </div>
-        </div>
-
-        <div class="control-group">
-            <label class="control-label">{{ _('Stop outlet when print failled') }}</label>
-            <div class="controls">
-                <input type="checkbox" id="plugins_ikea_tradfri_on_failed" class="input-block-level" data-bind="checked: settings.settings.plugins.ikea_tradfri.on_failed">
+            <div class="control-group">
+                <label class="control-label">{{ _('Ikea Gateway Security Code') }}</label>
+                <div class="controls">
+                    <input type="password" class="input-block-level" data-bind="value: settings.settings.plugins.ikea_tradfri.security_code">
+                </div>
             </div>
-        </div>
 
-        <div class="control-group">
-            <label class="control-label">{{ _('Delay before stop (in seconds)') }}</label>
-            <div class="controls">
-                <input type="number" min="-1" class="input-block-level" data-bind="value: settings.settings.plugins.ikea_tradfri.stop_timer">
-                <p><small>-1 for disabled</small></p>
+            <div class="control-group">
+                <label class="control-label">{{ _('Ikea Gateway Coap bin path') }}</label>
+                <div class="controls">
+                    <input type="text" class="input-block-level" data-bind="value: settings.settings.plugins.ikea_tradfri.coap_path">
+                </div>
             </div>
-        </div>
+            
 
-        <h1>Auto connect</h1>
+            <div class="control-group" data-bind="visible: statusOk() ">
+                <label class="control-label">{{ _('Printer outlet') }}</label>
+                <div class="controls">  
+                    <select data-bind="optionsCaption: 'Choose...', value: settings.settings.plugins.ikea_tradfri.selected_outlet, optionsText: 'name', optionsValue: 'id', options: settings.settings.plugins.ikea_tradfri.devices">
+                        
+                    </select>
+                </div>
 
-        <div class="control-group">
-            <label class="control-label">{{ _('Delay for auto connect (in seconds)') }}</label>
-            <div class="controls">
-                <input type="number" min="-1" class="input-block-level" data-bind="value: settings.settings.plugins.ikea_tradfri.connection_timer">
-                <p><small>-1 for disabled</small></p>
             </div>
-        </div>
+            
+            
 
+            
+            <p data-bind="visible: statusNoDevices()"> Successfully connected with your Ikea Gateway but <strong>no outlet found</strong>. Save for rescan </p>
+
+            <p data-bind="visible: statusFailConnection()"> Connection error with  your Ikea Gateway. Save for retry </p>
+
+
+            <div data-bind="visible: statusWaiting()">
+                <p><strong>Setup instructions</strong></p>
+                <ol> 
+                    <li>Set gateway's ip and security</li>
+                    <li>Save settings</li>
+                    <li>Indicate your outlet</li>
+                </ol>   
+            </div>
+            
+            <div data-bind="visible: statusOk() ">
+
+                <h1>Event configuration</h1>
+
+                <div class="control-group">
+                    <label class="control-label">{{ _('Stop outlet when print done') }}</label>
+                    <div class="controls">
+                        <input type="checkbox" id="plugins_ikea_tradfri_on_done" class="input-block-level" data-bind="checked: settings.settings.plugins.ikea_tradfri.on_done">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">{{ _('Stop outlet when print failled') }}</label>
+                    <div class="controls">
+                        <input type="checkbox" id="plugins_ikea_tradfri_on_failed" class="input-block-level" data-bind="checked: settings.settings.plugins.ikea_tradfri.on_failed">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">{{ _('Delay before stop (in seconds)') }}</label>
+                    <div class="controls">
+                        <input type="number" min="-1" class="input-block-level" data-bind="value: settings.settings.plugins.ikea_tradfri.stop_timer">
+                        <p><small>-1 for disabled</small></p>
+                    </div>
+                </div>
+
+                <h1>Auto connect</h1>
+
+                <div class="control-group">
+                    <label class="control-label">{{ _('Delay for auto connect (in seconds)') }}</label>
+                    <div class="controls">
+                        <input type="number" min="-1" class="input-block-level" data-bind="value: settings.settings.plugins.ikea_tradfri.connection_timer">
+                        <p><small>-1 for disabled</small></p>
+                    </div>
+                </div>
+
+            </div>
+
+        </form>
+    </div>
+
+    <div data-bind="visible: notsettings.loginState.hasPermission(settings.access.permissions.PLUGIN_IKEA_TRADFRI_ADMIN)">
+        <p>You don't have permissions to edit settings</p>
     </div>
 
 
-</form>
+</div>
  
                 

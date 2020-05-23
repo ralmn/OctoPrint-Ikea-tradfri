@@ -171,7 +171,7 @@ class IkeaTradfriPlugin(
     def get_template_configs(self):
         return [
             dict(type="navbar", custom_bindings=True, classes=["dropdown"]),
-            dict(type="settings", custom_bindings=True, data_bind="visible: settings.loginState.hasPermission(settings.access.permissions.PLUGIN_IKEA_TRADFRI_ADMIN)")
+            dict(type="settings", custom_bindings=True)
         ]
 
     def get_template_vars(self):
