@@ -15,9 +15,6 @@ import json
 import threading
 import uuid
 
-
-global coap
-coap = '/usr/local/bin/coap-client'
 userId = str(uuid.uuid1())[:8]
 
 
@@ -32,18 +29,19 @@ class IkeaTradfriPlugin(
     psk = None
     devices = []
     status = 'waiting'
-    error_message = ''
+    error_message = '' 
+
 
     def auth(self):
         gateway_ip = self._settings.get(["gateway_ip"])
         security_code = self._settings.get(["security_code"])
+        coap_path = self._settings.get(["coap_path"])
 
-        """ function for getting all tradfri device ids """
         tradfriHub = 'coaps://{}:5684/{}' .format(gateway_ip, "15011/9063")
         api = '{} -m post -e {} -u "Client_identity" -k "{}" "{}"' .format(
-            coap, "'{ \"9090\":\""+userId+"\" }'", security_code, tradfriHub)
+            coap_path, "'{ \"9090\":\""+userId+"\" }'", security_code, tradfriHub)
         # self._logger.info(api)
-        if os.path.exists(coap):
+        if os.path.exists(coap_path):
             result = os.popen(api)
         else:
             self._logger.error('[-] libcoap: could not find libcoap.\n')
@@ -55,8 +53,9 @@ class IkeaTradfriPlugin(
         try:
             data = json.loads(result.read().strip('\n'))
             return data['9091']
-        except:
+        except json.decoder.JSONDecodeError as e:
             self._logger.error('Fail to connect')
+            self._logger.error(e)
             return None
 
     def save_settings(self):
@@ -69,6 +68,8 @@ class IkeaTradfriPlugin(
 
     def run_gateway_get_request(self, path):
         gateway_ip = self._settings.get(["gateway_ip"])
+        coap_path = self._settings.get(["coap_path"])
+
         if self.psk is None:
             self.psk = self.auth()
         if self.psk is None:
@@ -77,10 +78,10 @@ class IkeaTradfriPlugin(
             return None
 
         tradfriHub = 'coaps://{}:5684/{}' .format(gateway_ip, path)
-        api = '{} -m get -u "{}" -k "{}" "{}"' .format(coap, userId, self.psk,
+        api = '{} -m get -u "{}" -k "{}" "{}"' .format(coap_path, userId, self.psk,
                                                        tradfriHub)
 
-        if os.path.exists(coap):
+        if os.path.exists(coap_path):
             result = os.popen(api)
         else:
             self._logger.error('[-] libcoap: could not find libcoap.\n')
@@ -89,15 +90,17 @@ class IkeaTradfriPlugin(
 
     def run_gateway_put_request(self, path, data):
         gateway_ip = self._settings.get(["gateway_ip"])
+        coap_path = self._settings.get(["coap_path"])
+
         if(self.psk == None):
             self.psk = self.auth()
         if self.psk is None:
             return None
         tradfriHub = 'coaps://{}:5684/{}' .format(gateway_ip, path)
         api = '{} -m put -e \'{}\' -u "{}" -k "{}" "{}" 2>/dev/null' .format(
-            coap, data, userId, self.psk, tradfriHub)
+            coap_path, data, userId, self.psk, tradfriHub)
         # self._logger.info(api)
-        if os.path.exists(coap):
+        if os.path.exists(coap_path):
             result = os.popen(api)
         else:
             self._logger.error('[-] libcoap: could not find libcoap.\n')
@@ -150,7 +153,8 @@ class IkeaTradfriPlugin(
             on_done=True,
             on_failed=True,
             connection_timer=5,
-            stop_timer=30
+            stop_timer=30,
+            coap_path='/usr/local/bin/coap-client'
         )
 
     # ~~ TemplatePlugin mixin
