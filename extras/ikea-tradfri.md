@@ -52,6 +52,7 @@ compatibility:
 
   octoprint:
   - 1.3.1
+  - 1.4.0
 
   # List of compatible operating systems
   #
