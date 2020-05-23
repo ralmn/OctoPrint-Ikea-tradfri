@@ -18,7 +18,7 @@ You need libcoap for communicate with your Ikea Gateway.
     git checkout dtls
     git submodule update --init --recursive
     ./autogen.sh
-    ./configure --disable-documentation --disable-shared
+    ./configure --disable-documentation --disable-shared --without-debug CFLAGS="-D COAP_DEBUG_FD=stderr"
     make
     make install
 
