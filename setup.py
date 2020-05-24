@@ -11,7 +11,7 @@ plugin_package = "octoprint_ikea_tradfri"
 
 # The plugin's human readable name. Can be overwritten within OctoPrint's internal data via __plugin_name__ in the
 # plugin module
-plugin_name = "OctoPrint-Ikea_tradfri"
+plugin_name = "OctoPrint Ikea Tradfri"
 
 # The plugin's version. Can be overwritten within OctoPrint's internal data via __plugin_version__ in the plugin module
 plugin_version = "1.1.4-dev"
