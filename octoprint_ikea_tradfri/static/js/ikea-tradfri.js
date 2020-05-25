@@ -16,6 +16,11 @@ $(function() {
         self.wizardDevices=ko.observable([]);
         self.wizardError=ko.observable(null);
 
+
+        self.iconClass =  ko.pureComputed(function(){
+            return "fa fa-" + self.settings.getLocalData().plugins.ikea_tradfri.icon;
+        });
+
         self.turnOn = function() {
             $.ajax({
                 url: API_BASEURL + "plugin/ikea_tradfri",
@@ -115,7 +120,7 @@ $(function() {
             }else{
                 return false;
             }
-        }
+        };
 
     }
 

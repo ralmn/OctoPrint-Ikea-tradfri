@@ -170,7 +170,8 @@ class IkeaTradfriPlugin(
             on_failed=True,
             connection_timer=5,
             stop_timer=30,
-            coap_path='/usr/local/bin/coap-client'
+            coap_path='/usr/local/bin/coap-client',
+            icon="plug"
         )
 
     # ~~ TemplatePlugin mixin
