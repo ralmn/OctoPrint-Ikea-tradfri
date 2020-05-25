@@ -94,7 +94,7 @@
         </form>
     </div>
 
-    <div data-bind="visible: notsettings.loginState.hasPermission(settings.access.permissions.PLUGIN_IKEA_TRADFRI_ADMIN)">
+    <div data-bind="visible: !settings.loginState.hasPermission(settings.access.permissions.PLUGIN_IKEA_TRADFRI_ADMIN)">
         <p>You don't have permissions to edit settings</p>
     </div>
 
