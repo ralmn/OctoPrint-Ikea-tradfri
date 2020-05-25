@@ -31,6 +31,8 @@ Install manually using this URL:
 
 ## Configuration
 
+Follow wizard or : 
+
 1. Indicate your gateway ip and your security code (found under your gateway)
 2. Save
 3. Select your outlet

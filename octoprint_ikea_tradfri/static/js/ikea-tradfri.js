@@ -12,6 +12,10 @@ $(function() {
         //self.loginStateViewModel = parameters[0];
         self.settings = parameters[0];
 
+
+        self.wizardDevices=ko.observable([]);
+        self.wizardError=ko.observable(null);
+
         self.turnOn = function() {
             $.ajax({
                 url: API_BASEURL + "plugin/ikea_tradfri",
@@ -54,6 +58,65 @@ $(function() {
         self.statusWaiting = function() {
             return self.settings.getLocalData().plugins.ikea_tradfri.status == "waiting";
         };
+
+        self.statusOk = function() {
+            return self.settings.getLocalData().plugins.ikea_tradfri.status == "ok";
+        };
+
+        self.wizardSetCoapPath = function(){
+            $.ajax({
+                url: BASEURL + "plugin/ikea_tradfri/wizard/coap_path",
+                type: "POST",
+                dataType: "json",
+                data: JSON.stringify({
+                    coap_path: $('#wizardIkeaTradfriCoapPath').val()
+                }),
+                contentType: "application/json; charset=UTF-8"
+            }).done(function(data) {});
+        };
+
+        self.getWizardDevices = function(){
+            return self.wizardDevices;
+        }
+        
+        self.wizardTryConnect = function(){
+            $.ajax({
+                url: BASEURL + "plugin/ikea_tradfri/wizard/tryConnect",
+                type: "POST",
+                //dataType: "json",
+                data: JSON.stringify({
+                    securityCode: $('#wizardIkeaTradfriSecurityCode').val(),
+                    gateway: $('#wizardIkeaTradfriGateway').val()
+                }),
+                contentType: "application/json; charset=UTF-8"
+            }).done(function(data) {
+                //console.log('done', data);  
+                self.wizardDevices(JSON.parse(data));              
+                console.log(self.wizardDevices);
+                self.wizardError(null);
+            }).fail(function( jqXHR, textStatus, errorThrown) {
+                //console.log('error',  jqXHR, textStatus, errorThrown);
+                self.wizardError("Error when connection")
+            });
+        };
+
+        self.onBeforeWizardFinish = function(){
+            if($("#wizardIkeaTradfriDevices").val()){
+                $.ajax({
+                    url: BASEURL + "plugin/ikea_tradfri/wizard/setOutlet",
+                    type: "POST",
+                    //dataType: "json",
+                    data: JSON.stringify({
+                        selected_outlet: $('#wizardIkeaTradfriDevices').val()
+                    }),
+                    contentType: "application/json; charset=UTF-8"
+                })
+                return true;
+            }else{
+                return false;
+            }
+        }
+
     }
 
     /* view model class, parameters for constructor, container to bind to
@@ -64,8 +127,8 @@ $(function() {
         construct: IkeaTradfriViewModel,
         additionalNames: ["ikeaTradfriViewModel"],
         // ViewModels your plugin depends on, e.g. loginStateViewModel, settingsViewModel, ...
-        dependencies: ["settingsViewModel"],
+        dependencies: ["settingsViewModel", "loginStateViewModel", "wizardViewModel"],
         // Elements to bind to, e.g. #settings_plugin_ikea-tradfri, #tab_plugin_ikea-tradfri, ...
-        elements: ["#navbar_plugin_ikea_tradfri", "#settings_plugin_ikea_tradfri"]
+        elements: ["#navbar_plugin_ikea_tradfri", "#settings_plugin_ikea_tradfri", "#wizard_plugin_ikea_tradfri"]
     });
 });

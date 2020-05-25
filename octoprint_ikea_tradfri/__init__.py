@@ -17,6 +17,7 @@ import os
 import json
 import threading
 import uuid
+import flask
 from sarge import capture_stdout
 from flask_babel import gettext
 
@@ -30,7 +31,9 @@ class IkeaTradfriPlugin(
         octoprint.plugin.StartupPlugin,
         octoprint.plugin.SettingsPlugin,
         octoprint.plugin.AssetPlugin,
-        octoprint.plugin.TemplatePlugin):
+        octoprint.plugin.TemplatePlugin,
+        octoprint.plugin.WizardPlugin,
+        octoprint.plugin.BlueprintPlugin):
 
     psk = None
     devices = []
@@ -38,9 +41,7 @@ class IkeaTradfriPlugin(
     error_message = '' 
 
 
-    def auth(self):
-        gateway_ip = self._settings.get(["gateway_ip"])
-        security_code = self._settings.get(["security_code"])
+    def _auth(self, gateway_ip, security_code):
         coap_path = self._settings.get(["coap_path"])
 
         tradfriHub = 'coaps://{}:5684/{}' .format(gateway_ip, "15011/9063")
@@ -50,20 +51,26 @@ class IkeaTradfriPlugin(
         if os.path.exists(coap_path):
             p = capture_stdout(api)
             result = p.stdout.text
+            try:
+                data = json.loads(result.strip('\n'))
+                return data['9091']
+            except json.decoder.JSONDecodeError as e:
+                self._logger.error('Fail to connect')
+                self._logger.error(e)
+                return None
         else:
             self._logger.error('[-] libcoap: could not find libcoap.\n')
             self.status = 'connection_failled'
             self.error_message = 'libcoap: could not find libcoap'
             self.save_settings()
-            return None
+            return None 
 
-        try:
-            data = json.loads(result.strip('\n'))
-            return data['9091']
-        except json.decoder.JSONDecodeError as e:
-            self._logger.error('Fail to connect')
-            self._logger.error(e)
-            return None
+    def auth(self):
+        gateway_ip = self._settings.get(["gateway_ip"])
+        security_code = self._settings.get(["security_code"])
+        
+        return self._auth(gateway_ip, security_code)
+        
 
     def save_settings(self):
         self._settings.set(['status'], self.status)
@@ -171,7 +178,8 @@ class IkeaTradfriPlugin(
     def get_template_configs(self):
         return [
             dict(type="navbar", custom_bindings=True, classes=["dropdown"]),
-            dict(type="settings", custom_bindings=True)
+            dict(type="settings", custom_bindings=True),
+            dict(type="wizard", custom_bindings=True)
         ]
 
     def get_template_vars(self):
@@ -259,6 +267,7 @@ class IkeaTradfriPlugin(
                 devices=self.devices,
                 error_message=self.error_message
             )
+
     def get_additional_permissions(self):
         return [
             dict(key="ADMIN",
@@ -268,6 +277,67 @@ class IkeaTradfriPlugin(
                  roles=["admins"])
         ]
 
+    ### Wizard
+
+    def is_wizard_required(self):
+        gateway_ip = self._settings.get(["gateway_ip"])
+        security_code = self._settings.get(["security_code"])
+        selected_outlet = self._settings.get(['selected_outlet'])
+        return gateway_ip == "" or security_code == "" or selected_outlet is None
+
+    def get_wizard_version(self):
+        return 1
+
+    @octoprint.plugin.BlueprintPlugin.route("/wizard/coap_path", methods=["POST"])
+    def wizardSetCoapPath(self):
+        if not "coap_path" in flask.request.json:
+            return flask.make_response("Expected coap_path.", 400)
+        coap_path = flask.request.json['coap_path']
+        self._settings.set(['coap_path'], coap_path)
+        self._settings.save()
+
+        return flask.make_response("OK", 200)
+
+    @octoprint.plugin.BlueprintPlugin.route("/wizard/setOutlet", methods=["POST"])
+    def wizardSetOutlet(self):
+        if not "selected_outlet" in flask.request.json:
+            return flask.make_response("Expected selected_outlet.", 400)
+        selected_outlet = flask.request.json['selected_outlet']
+        self._settings.set(['selected_outlet'], selected_outlet)
+        self._settings.save()
+
+        return flask.make_response("OK", 200)
+        
+        
+    
+    @octoprint.plugin.BlueprintPlugin.route("/wizard/tryConnect", methods=["POST"])
+    def wizardTryConnect(self):
+        if not "securityCode" in flask.request.json or not "gateway" in flask.request.json:
+            return flask.make_response("Expected security code and gateway.", 400)
+        securityCode = flask.request.json['securityCode']
+        gateway = flask.request.json['gateway']
+
+        if self.psk is not None:
+            global userId
+            userId = str(uuid.uuid1())[:8]
+            self.psk = None
+            
+        
+        self.psk = self._auth(gateway, securityCode)
+
+        if self.psk is not None:
+            self._settings.set(['security_code'], securityCode)
+            self._settings.set(['gateway_ip'], gateway)
+            self._settings.save()
+            self.loadDevices()
+                
+            devices = self._settings.get(['devices'])
+            return flask.make_response(json.dumps(devices, indent=4), 200)
+        else:
+            return flask.make_response("Failed to connect.", 500)
+        
+
+        
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
