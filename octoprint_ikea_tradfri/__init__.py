@@ -247,6 +247,11 @@ class IkeaTradfriPlugin(
             c.start()
 
     def turnOff(self):
+
+        if self._printer.is_printing():
+            self._logger.info("Don't turn off outlet because printer is printing !")
+            return
+
         self._logger.info('stop')
         self.run_gateway_put_request(
             '/15001/{}'.format(self._settings.get(['selected_outlet'])), '{ "3312": [{ "5850": 0 }] }')
