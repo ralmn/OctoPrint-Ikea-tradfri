@@ -54,7 +54,7 @@ class IkeaTradfriPlugin(
             try:
                 data = json.loads(result.strip('\n'))
                 return data['9091']
-            except json.decoder.JSONDecodeError as e:
+            except ValueError as e:
                 self._logger.error('Fail to connect')
                 self._logger.error(e)
                 return None
