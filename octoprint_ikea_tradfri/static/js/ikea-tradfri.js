@@ -115,11 +115,9 @@ $(function() {
                         selected_outlet: $('#wizardIkeaTradfriDevices').val()
                     }),
                     contentType: "application/json; charset=UTF-8"
-                })
-                return true;
-            }else{
-                return false;
+                });
             }
+            return true;
         };
 
     }
