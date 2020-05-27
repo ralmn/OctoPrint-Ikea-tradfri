@@ -55,7 +55,9 @@ class IkeaTradfriPlugin(
                 data = json.loads(result.strip('\n'))
                 return data['9091']
             except ValueError as e:
-                self._logger.error('Fail to connect')
+                self._logger.error('Fail to get psk token')
+                self._logger.error("stdout: %s" + p.stdout.text)
+                self._logger.error("stderr: %s" + p.stderr.text)
                 self._logger.error(e)
                 return None
         else:
@@ -88,6 +90,7 @@ class IkeaTradfriPlugin(
             self.psk = self.auth()
         if self.psk is None:
             self.status = 'connection_failled'
+            self._logger.error('Failed to get psk key (run_gateway_get_request)')
             self.save_settings()
             return None
 
@@ -110,7 +113,11 @@ class IkeaTradfriPlugin(
         if(self.psk == None):
             self.psk = self.auth()
         if self.psk is None:
+            self.status = 'connection_failled'
+            self._logger.error('Failed to get psk key (run_gateway_put_request)')
+            self.save_settings()
             return None
+        
         tradfriHub = 'coaps://{}:5684/{}' .format(gateway_ip, path)
         api = '{} -m put -e \'{}\' -u "{}" -k "{}" "{}" 2>/dev/null' .format(
             coap_path, data, userId, self.psk, tradfriHub)
@@ -340,6 +347,7 @@ class IkeaTradfriPlugin(
             devices = self._settings.get(['devices'])
             return flask.make_response(json.dumps(devices, indent=4), 200)
         else:
+            self._logger.error('Failed to get psk key (wizardTryConnect)')
             return flask.make_response("Failed to connect.", 500)
         
 
