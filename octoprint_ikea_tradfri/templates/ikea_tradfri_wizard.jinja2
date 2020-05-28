@@ -3,7 +3,7 @@
     <h1>{{_('Setup Ikea TRADFI')}}</h1>
 
     <div>
-        <h2>{{_('Step 1 : Connection')}}</h2>
+        <h2>{{_('Step 1: Connection')}}</h2>
 
         <div class="control-group">
             <label class="control-label">{{ _('Coap bin path') }}</label>
@@ -11,7 +11,7 @@
                 <input type="text" class="input-block-level"  id="wizardIkeaTradfriCoapPath" data-bind="value: settings.settings.plugins.ikea_tradfri.coap_path">
             </div>
 
-            <small>{{ _('Coap install instruction : ') }} <a target="_blank" href="https://github.com/ralmn/OctoPrint-Ikea-tradfri">{{ _('here') }}</a></small>
+            <small>{{ _('Coap install instruction: ') }} <a target="_blank" href="https://github.com/ralmn/OctoPrint-Ikea-tradfri">{{ _('here') }}</a></small>
         </div> 
 
         <button class="btn" data-bind="click: wizardSetCoapPath">{{_('Update Coap path')}}</button>
@@ -42,7 +42,7 @@
 
     <div data-bind="visible: wizardDevices().length">
 
-        <h2>{{_('Step 2 : Select outlet')}}</h2>
+        <h2>{{_('Step 2: Select outlet')}}</h2>
 
         <div class="control-group">
             <label class="control-label">{{ _('Printer outlet') }}</label>

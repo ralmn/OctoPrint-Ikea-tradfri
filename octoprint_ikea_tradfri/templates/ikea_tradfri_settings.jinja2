@@ -1,9 +1,8 @@
 <div id="form_ikea_tradfri">
     <div data-bind="visible: settings.loginState.hasPermission(settings.access.permissions.PLUGIN_IKEA_TRADFRI_ADMIN)">
         <form class="form-horizontal">
-        
 
-            <h1>General configuration</h1>
+            <h1>{{ _("General configuration") }}</h1>
 
             <div class="control-group">
                 <label class="control-label">{{ _('Ikea Gateway IP') }}</label>
@@ -34,69 +33,65 @@
                     </select>
                 </div>
 
-            </div>
+            </div>        
             
-            
+            <p data-bind="visible: statusNoDevices()"> {{ _("Successfully connected with your Ikea Gateway but <strong>no outlet found</strong>. Save for rescan")}} </p>
 
-            
-            <p data-bind="visible: statusNoDevices()"> Successfully connected with your Ikea Gateway but <strong>no outlet found</strong>. Save for rescan </p>
-
-            <p data-bind="visible: statusFailConnection()"> Connection error with  your Ikea Gateway. Save for retry </p>
-
+            <p data-bind="visible: statusFailConnection()"> {{_("Connection error with your Ikea Gateway. Save for retry")}} </p>
 
             <div data-bind="visible: statusWaiting()">
-                <p><strong>Setup instructions</strong></p>
+                <p><strong>{{_("Setup instructions")}}</strong></p>
                 <ol> 
-                    <li>Set gateway's ip and security</li>
-                    <li>Save settings</li>
-                    <li>Indicate your outlet</li>
+                    <li>{{_("Set gateway's ip and security")}}</li>
+                    <li>{{_("Save settings")}}</li>
+                    <li>{{_("Choose your outlet")}}</li>
                 </ol>   
             </div>
             
             <div data-bind="visible: statusOk() ">
 
-                <h1>Event configuration</h1>
+                <h1>{{_("Event configuration")}}</h1>
 
                 <div class="control-group">
-                    <label class="control-label">{{ _('Stop outlet when print done') }}</label>
+                    <label class="control-label">{{ _('Turn off outlet when print succeeded') }}</label>
                     <div class="controls">
                         <input type="checkbox" id="plugins_ikea_tradfri_on_done" class="input-block-level" data-bind="checked: settings.settings.plugins.ikea_tradfri.on_done">
                     </div>
                 </div>
 
                 <div class="control-group">
-                    <label class="control-label">{{ _('Stop outlet when print failled') }}</label>
+                    <label class="control-label">{{ _('Turn off outlet when print failed/canceled') }}</label>
                     <div class="controls">
                         <input type="checkbox" id="plugins_ikea_tradfri_on_failed" class="input-block-level" data-bind="checked: settings.settings.plugins.ikea_tradfri.on_failed">
                     </div>
                 </div>
 
                 <div class="control-group">
-                    <label class="control-label">{{ _('Delay before stop (in seconds)') }}</label>
+                    <label class="control-label">{{ _('Delay before turn off (in seconds)') }}</label>
                     <div class="controls">
                         <input type="number" min="-1" class="input-block-level" data-bind="value: settings.settings.plugins.ikea_tradfri.stop_timer">
-                        <p><small>-1 for disabled</small></p>
+                        <p><small>{{_("-1 for disabled")}}</small></p>
                     </div>
                 </div>
 
-                <h1>Auto connect</h1>
+                <h1>{{_("Auto connect")}}</h1>
 
                 <div class="control-group">
                     <label class="control-label">{{ _('Delay for auto connect (in seconds)') }}</label>
                     <div class="controls">
                         <input type="number" min="-1" class="input-block-level" data-bind="value: settings.settings.plugins.ikea_tradfri.connection_timer">
-                        <p><small>-1 for disabled</small></p>
+                        <p><small>{{_("-1 for disabled")}}</small></p>
                     </div>
                 </div>
 
-                <h1>UI</h1>
+                <h1>{{_("UI")}}</h1>
 
                 <div class="control-group">
                     <label class="control-label">{{ _('Navbar icon') }}</label>
                     <div class="controls">
                         <input type="text" id="plugins_ikea_tradfri_icon" class="input-block-level" data-bind="value: settings.settings.plugins.ikea_tradfri.icon">
                     </div>
-                    <small><a target="_blank" href="https://fontawesome.com/v4.7.0/icons/"> Icons list </a></small>
+                    <small><a target="_blank" href="https://fontawesome.com/v4.7.0/icons/"> {{_("Icons list")}} </a></small>
                 </div>
 
             </div>
@@ -105,7 +100,7 @@
     </div>
 
     <div data-bind="visible: !settings.loginState.hasPermission(settings.access.permissions.PLUGIN_IKEA_TRADFRI_ADMIN)">
-        <p>You don't have permissions to edit settings</p>
+        <p>{{ _("You don't have permissions to edit settings") }}</p>
     </div>
 
 
