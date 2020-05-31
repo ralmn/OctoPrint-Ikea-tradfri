@@ -20,6 +20,7 @@ import uuid
 import flask
 from sarge import capture_stdout
 from flask_babel import gettext
+from . import cli
 
 
 userId = str(uuid.uuid1())[:8]
@@ -365,6 +366,7 @@ def __plugin_load__():
 
     global __plugin_hooks__
     __plugin_hooks__ = {
+        "octoprint.cli.commands": cli.commands,
         "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
         "octoprint.access.permissions": __plugin_implementation__.get_additional_permissions
     }
