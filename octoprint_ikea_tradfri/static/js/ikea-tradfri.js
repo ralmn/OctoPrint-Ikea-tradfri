@@ -21,27 +21,23 @@ $(function() {
             return "fa fa-" + self.settings.getLocalData().plugins.ikea_tradfri.icon;
         });
 
-        self.turnOn = function() {
+        self.command = function(command_name) {
             $.ajax({
                 url: API_BASEURL + "plugin/ikea_tradfri",
                 type: "POST",
                 dataType: "json",
                 data: JSON.stringify({
-                    command: "turnOn"
+                    command: command_name
                 }),
                 contentType: "application/json; charset=UTF-8"
             }).done(function(data) {});
         };
+
+        self.turnOn = function() {
+            self.command("turnOn");
+        };
         self.turnOff = function() {
-            $.ajax({
-                url: API_BASEURL + "plugin/ikea_tradfri",
-                type: "POST",
-                dataType: "json",
-                data: JSON.stringify({
-                    command: "turnOff"
-                }),
-                contentType: "application/json; charset=UTF-8"
-            }).done(function(data) {});
+            self.command("turnOff");
         };
 
         self.canDisplayNavbar = function() {
