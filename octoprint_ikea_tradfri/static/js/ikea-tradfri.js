@@ -12,36 +12,39 @@ $(function() {
         //self.loginStateViewModel = parameters[0];
         self.settings = parameters[0];
 
+        self.printer = parameters[3];
+
+        console.log(self.printer);
 
         self.wizardDevices=ko.observable([]);
         self.wizardError=ko.observable(null);
+
+        self.sidebarInfo = ko.observable({
+            shutdownAt: null
+        });
 
 
         self.iconClass =  ko.pureComputed(function(){
             return "fa fa-" + self.settings.getLocalData().plugins.ikea_tradfri.icon;
         });
 
-        self.turnOn = function() {
+        self.command = function(command_name) {
             $.ajax({
                 url: API_BASEURL + "plugin/ikea_tradfri",
                 type: "POST",
                 dataType: "json",
                 data: JSON.stringify({
-                    command: "turnOn"
+                    command: command_name
                 }),
                 contentType: "application/json; charset=UTF-8"
             }).done(function(data) {});
         };
+
+        self.turnOn = function() {
+            self.command("turnOn");
+        };
         self.turnOff = function() {
-            $.ajax({
-                url: API_BASEURL + "plugin/ikea_tradfri",
-                type: "POST",
-                dataType: "json",
-                data: JSON.stringify({
-                    command: "turnOff"
-                }),
-                contentType: "application/json; charset=UTF-8"
-            }).done(function(data) {});
+            self.command("turnOff");
         };
 
         self.canDisplayNavbar = function() {
@@ -67,6 +70,15 @@ $(function() {
         self.statusOk = function() {
             return self.settings.getLocalData().plugins.ikea_tradfri.status == "ok";
         };
+
+        self.sideBarInfoInterval = setInterval(function(){
+            $.ajax({
+                url: BASEURL + "plugin/ikea_tradfri/sidebar/info",
+                type: "GET",
+                dataType: "json"
+            }).done(self.onSidebarInfo);
+        }, 1000);
+
 
         self.wizardSetCoapPath = function(){
             $.ajax({
@@ -105,6 +117,68 @@ $(function() {
             });
         };
 
+        self.onSidebarInfo = function(data){
+            //console.log("onSidebarInfo ==>", data)
+            self.sidebarInfo(data);
+            //console.log("onSidebarInfo <== ", self.sidebarInfo())
+        };
+
+        self.sidebarShutdownAt = function(){
+            return new Date(self.sidebarInfo().shutdownAt * 1000).toLocaleTimeString();
+        }
+
+        self.sidebarInfoShutdownPlanned = function(){
+            return self.sidebarInfo().shutdownAt != null
+        }
+
+        self.postponeShutdown = function(){
+            $.ajax({
+                url: BASEURL + "plugin/ikea_tradfri/sidebar/postpone",
+                type: "POST",
+                dataType: "json",
+                // data: JSON.stringify({
+                //     securityCode: $('#wizardIkeaTradfriSecurityCode').val(),
+                //     gateway: $('#wizardIkeaTradfriGateway').val()
+                // }),
+                contentType: "application/json; charset=UTF-8"
+            }).done(self.onSidebarInfo).fail(function( jqXHR, textStatus, errorThrown) {
+                //console.log('error',  jqXHR, textStatus, errorThrown);
+                self.wizardError("Error when connection")
+            });
+        }
+
+        self.cancelShutdown = function(){
+            $.ajax({
+                url: BASEURL + "plugin/ikea_tradfri/sidebar/cancelShutdown",
+                type: "POST",
+                dataType: "json",
+                // data: JSON.stringify({
+                //     securityCode: $('#wizardIkeaTradfriSecurityCode').val(),
+                //     gateway: $('#wizardIkeaTradfriGateway').val()
+                // }),
+                contentType: "application/json; charset=UTF-8"
+            }).done(self.onSidebarInfo).fail(function( jqXHR, textStatus, errorThrown) {
+                //console.log('error',  jqXHR, textStatus, errorThrown);
+                self.wizardError("Error when connection")
+            });
+        }
+
+        self.shutdownNow = function(){
+            $.ajax({
+                url: BASEURL + "plugin/ikea_tradfri/sidebar/shutdownNow",
+                type: "POST",
+                dataType: "json",
+                // data: JSON.stringify({
+                //     securityCode: $('#wizardIkeaTradfriSecurityCode').val(),
+                //     gateway: $('#wizardIkeaTradfriGateway').val()
+                // }),
+                contentType: "application/json; charset=UTF-8"
+            }).done(self.onSidebarInfo).fail(function( jqXHR, textStatus, errorThrown) {
+                //console.log('error',  jqXHR, textStatus, errorThrown);
+                self.wizardError("Error when connection")
+            });
+        }
+
         self.onBeforeWizardFinish = function(){
             if($("#wizardIkeaTradfriDevices").val()){
                 $.ajax({
@@ -130,8 +204,8 @@ $(function() {
         construct: IkeaTradfriViewModel,
         additionalNames: ["ikeaTradfriViewModel"],
         // ViewModels your plugin depends on, e.g. loginStateViewModel, settingsViewModel, ...
-        dependencies: ["settingsViewModel", "loginStateViewModel", "wizardViewModel"],
+        dependencies: ["settingsViewModel", "loginStateViewModel", "wizardViewModel", "printerStateViewModel"],
         // Elements to bind to, e.g. #settings_plugin_ikea-tradfri, #tab_plugin_ikea-tradfri, ...
-        elements: ["#navbar_plugin_ikea_tradfri", "#settings_plugin_ikea_tradfri", "#wizard_plugin_ikea_tradfri"]
+        elements: ["#navbar_plugin_ikea_tradfri", "#settings_plugin_ikea_tradfri", "#wizard_plugin_ikea_tradfri", "#sidebar_plugin_ikea_tradfri"]
     });
 });

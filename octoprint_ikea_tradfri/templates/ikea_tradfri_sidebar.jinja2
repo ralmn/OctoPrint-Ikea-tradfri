@@ -1,0 +1,14 @@
+<div>
+    <div data-bind="visible: sidebarInfoShutdownPlanned()">
+        <p>Shutdown planned at <span data-bind="text: sidebarShutdownAt()"></span></p>
+        <button class="btn btn-secondary" data-bind="enable: !printer.isPrinting(), click: postponeShutdown">{{_("Postpone shutdown for %(postponeDelay)s sec", postponeDelay=plugin_ikea_tradfri_postponeDelay)}}</button>
+        <button class="btn btn-secondary" data-bind="enable: !printer.isPrinting(), click: cancelShutdown">{{_("Cancel scheduled shutdown")}}</button>
+        <button class="btn btn-secondary" data-bind="enable: !printer.isPrinting(), click: shutdownNow">{{_("Shutdown now")}}</button>
+    </div>
+    <div data-bind="visible: !sidebarInfoShutdownPlanned()">
+        <p>No shutdown planned</p>        
+        <button class="btn btn-secondary" data-bind="enable: !printer.isPrinting(), click: postponeShutdown">{{_("Scheduled shutdown in %(postponeDelay)s sec", postponeDelay=plugin_ikea_tradfri_postponeDelay)}}</button>
+        <button class="btn btn-secondary" data-bind="enable: !printer.isPrinting(), click: shutdownNow">{{_("Shutdown now")}}</button>
+    </div>
+
+</div>

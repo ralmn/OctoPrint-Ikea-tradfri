@@ -74,6 +74,13 @@
                     </div>
                 </div>
 
+                <div class="control-group">
+                    <label class="control-label">{{ _('Postpone delay (in seconds)') }}</label>
+                    <div class="controls">
+                        <input type="number" min="1" class="input-block-level" data-bind="value: settings.settings.plugins.ikea_tradfri.postponeDelay">
+                    </div>
+                </div>
+
                 <h1>{{_("Auto connect")}}</h1>
 
                 <div class="control-group">
