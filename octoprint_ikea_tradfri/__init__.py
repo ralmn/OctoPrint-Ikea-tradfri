@@ -18,6 +18,8 @@ import json
 import threading
 import uuid
 import flask
+import time
+import math
 from sarge import capture_stdout
 from flask_babel import gettext
 from . import cli
@@ -40,6 +42,8 @@ class IkeaTradfriPlugin(
     devices = []
     status = 'waiting'
     error_message = '' 
+    shutdownAt = None
+    stopTimer = None
 
 
     def _auth(self, gateway_ip, security_code):
@@ -156,6 +160,11 @@ class IkeaTradfriPlugin(
         self.save_settings()
 
     def on_settings_save(self, data):
+        keyAsNumber = ['postponeDelay', 'stop_timer', 'connection_timer']
+        for key in data:
+            if key in keyAsNumber:
+                data[key] = int(data[key])
+
         octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
         self.loadDevices()
 
@@ -178,6 +187,7 @@ class IkeaTradfriPlugin(
             on_failed=True,
             connection_timer=5,
             stop_timer=30,
+            postponeDelay=120,
             coap_path='/usr/local/bin/coap-client',
             icon="plug"
         )
@@ -188,13 +198,16 @@ class IkeaTradfriPlugin(
         return [
             dict(type="navbar", custom_bindings=True, classes=["dropdown"]),
             dict(type="settings", custom_bindings=True),
-            dict(type="wizard", custom_bindings=True)
+            dict(type="wizard", custom_bindings=True),
+            dict(type="sidebar", custom_bindings=True)
         ]
 
     def get_template_vars(self):
         return dict(
             devices=self.devices,
-            status=self.status
+            status=self.status,
+            shutdownAt=self.shutdownAt,
+            postponeDelay=self._settings.get(['postponeDelay'])
         )
     # ~~ AssetPlugin mixin
 
@@ -230,21 +243,31 @@ class IkeaTradfriPlugin(
         )
 
     def on_event(self, event, payload):
+        scheduleStop = False
         if event == 'PrintDone' and self._settings.get_boolean(['on_done']):
-            stop_timer=int( self._settings.get(['stop_timer']) )
-            if stop_timer >= -1:
-                c = threading.Timer(stop_timer,self.turnOff)
-                c.start()
-            else:
-                self.turnOff()
+            scheduleStop = True
         if event == 'PrintFailed' and self._settings.get_boolean(['on_failed']):
+            scheduleStop = True
+        if scheduleStop:
             stop_timer=int( self._settings.get(['stop_timer']) )
-            if stop_timer >= -1:
-                c = threading.Timer(stop_timer,self.turnOff)
-                c.start()
-            else:
-                self.turnOff()
-        
+            self.planStop(stop_timer)
+
+
+    def planStop(self, delay):
+        if self.stopTimer is not None:
+            self.stopTimer.cancel()
+
+        now = math.ceil(time.time())
+
+        if self.shutdownAt is not None:
+            self.shutdownAt += delay
+        else:
+            self.shutdownAt = now + delay
+        stopIn = (self.shutdownAt - now)
+        self._logger.info("Schedule turn off in %d s" % stopIn)
+        self.stopTimer = threading.Timer(stopIn, self.turnOff)
+        self.stopTimer.start()
+
 
     def turnOn(self):
         self.run_gateway_put_request(
@@ -255,14 +278,17 @@ class IkeaTradfriPlugin(
             c.start()
 
     def turnOff(self):
+        self.shutdownAt = None
+        if self.stopTimer is not None:
+            self.stopTimer.cancel()
+            self.stopTimer = None
 
         if self._printer.is_printing():
             self._logger.info("Don't turn off outlet because printer is printing !")
             return
 
         self._logger.info('stop')
-        self.run_gateway_put_request(
-            '/15001/{}'.format(self._settings.get(['selected_outlet'])), '{ "3312": [{ "5850": 0 }] }')
+        self.run_gateway_put_request( '/15001/{}'.format(self._settings.get(['selected_outlet'])), '{ "3312": [{ "5850": 0 }] }' )
 
     def get_api_commands(self):
         return dict(
@@ -275,12 +301,6 @@ class IkeaTradfriPlugin(
             self.turnOn()
         elif command == "turnOff":
             self.turnOff()
-        elif commad == "loadSettings":
-            return dict(
-                status=self.status,
-                devices=self.devices,
-                error_message=self.error_message
-            )
 
     def get_additional_permissions(self):
         return [
@@ -291,8 +311,36 @@ class IkeaTradfriPlugin(
                  roles=["admins"])
         ]
 
-    ### Wizard
+    ##Sidebar
 
+    @octoprint.plugin.BlueprintPlugin.route("/sidebar/info", methods=["GET"])
+    def sidebarInfo(self):
+        data = dict(
+            shutdownAt=self.shutdownAt
+        )
+        return flask.make_response(json.dumps(data), 200)
+
+    @octoprint.plugin.BlueprintPlugin.route("/sidebar/postpone", methods=["POST"])
+    def sidebarPostponeShutdown(self):
+        postponeDelay = self._settings.get(['postponeDelay'])
+        self.planStop(postponeDelay)
+
+        return self.sidebarInfo()
+
+    @octoprint.plugin.BlueprintPlugin.route("/sidebar/cancelShutdown", methods=["POST"])
+    def sidebarCancelShutdown(self):
+        if self.stopTimer is not None:
+            self.shutdownAt = None
+            self.stopTimer.cancel()
+            self.stopTimer = None
+        return self.sidebarInfo()
+
+    @octoprint.plugin.BlueprintPlugin.route("/sidebar/shutdownNow", methods=["POST"])
+    def sidebarShutdownNow(self):
+        self.turnOff()
+        return self.sidebarInfo()
+
+    ### Wizard
     def is_wizard_required(self):
         gateway_ip = self._settings.get(["gateway_ip"])
         security_code = self._settings.get(["security_code"])
@@ -321,9 +369,8 @@ class IkeaTradfriPlugin(
         self._settings.save()
 
         return flask.make_response("OK", 200)
-        
-        
-    
+
+
     @octoprint.plugin.BlueprintPlugin.route("/wizard/tryConnect", methods=["POST"])
     def wizardTryConnect(self):
         if not "securityCode" in flask.request.json or not "gateway" in flask.request.json:
@@ -350,9 +397,7 @@ class IkeaTradfriPlugin(
         else:
             self._logger.error('Failed to get psk key (wizardTryConnect)')
             return flask.make_response("Failed to connect.", 500)
-        
 
-        
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
