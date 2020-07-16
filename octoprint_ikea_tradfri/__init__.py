@@ -398,6 +398,35 @@ class IkeaTradfriPlugin(
             self._logger.error('Failed to get psk key (wizardTryConnect)')
             return flask.make_response("Failed to connect.", 500)
 
+    @octoprint.plugin.BlueprintPlugin.route("/state", methods=["GET"])
+    def getState(self):
+        data = self.run_gateway_get_request('/15001/{}'.format(self._settings.get(['selected_outlet'])))
+        state = data["3312"][0]["5850"]==1
+
+        res = dict(
+            state=state
+        )
+
+        return flask.make_response(json.dumps(res, indent=4), 200)
+
+    @octoprint.plugin.BlueprintPlugin.route("/state", methods=["POST"])
+    def setState(self):
+        state = flask.request.json['state']
+
+        if state == 1 or state == True:
+            self.turnOn()
+        else:
+            self.turnOff()
+
+        data = self.run_gateway_get_request('/15001/{}'.format(self._settings.get(['selected_outlet'])))
+        state = data["3312"][0]["5850"]==1
+
+        res = dict(
+            state=state
+        )
+
+        return flask.make_response(json.dumps(res, indent=4), 200)
+
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
