@@ -23,9 +23,13 @@ $(function() {
             shutdownAt: null
         });
 
+        self.navInfo = ko.observable({
+            state: false
+        });
+
 
         self.iconClass =  ko.pureComputed(function(){
-            return "fa fa-" + self.settings.getLocalData().plugins.ikea_tradfri.icon;
+            return "fa fa-" + self.settings.getLocalData().plugins.ikea_tradfri.icon + " state-icon " + (self.navInfo().state ? 'state-on' : 'state-off');
         });
 
         self.command = function(command_name) {
@@ -120,10 +124,26 @@ $(function() {
         self.onDataUpdaterPluginMessage = function(plugin, msg){
             if(plugin == 'ikea_tradfri'){
                 if(msg.type == 'sidebar'){
-                    console.log('data', plugin, msg);
                     self.onSidebarInfo(msg.payload);
+                }else if(msg.type == 'navbar'){
+                    self.navInfo(msg.payload);
                 }
             }
+        }
+
+        self.onStartupComplete = function(event){
+            console.log('onStartupComplete', arguments)
+            $.ajax({
+                url: BASEURL + "plugin/ikea_tradfri/sidebar/info",
+                type: "GET",
+                dataType: "json"
+            }).done(self.onSidebarInfo);
+            $.ajax({
+                url: BASEURL + "plugin/ikea_tradfri/navbar/info",
+                type: "GET",
+                dataType: "json"
+            }).done(self.navInfo);
+
         }
 
         self.onSidebarInfo = function(data){
@@ -202,6 +222,11 @@ $(function() {
             }
             return true;
         };
+
+        self.stateOn = function(){
+            console.log(self.navInfo(), self.navInfo().state);
+            return self.navInfo().state;
+        }
 
     }
 

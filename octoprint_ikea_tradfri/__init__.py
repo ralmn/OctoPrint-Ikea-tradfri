@@ -253,6 +253,11 @@ class IkeaTradfriPlugin(
             self.planStop(stop_timer)
 
 
+    def navbarInfoData(self):
+        return dict(
+            state=self.getStateData()['state']
+        )
+
     def planStop(self, delay):
         if self.stopTimer is not None:
             self.stopTimer.cancel()
@@ -279,6 +284,8 @@ class IkeaTradfriPlugin(
             c = threading.Timer(connection_timer,self._printer.connect)
             c.start()
         self._send_message("sidebar", self.sidebarInfoData())
+        self._send_message("navbar", self.navbarInfoData())
+        
 
     def turnOff(self):
         self.shutdownAt = None
@@ -293,6 +300,7 @@ class IkeaTradfriPlugin(
 
         self._logger.info('stop')
         self.run_gateway_put_request( '/15001/{}'.format(self._settings.get(['selected_outlet'])), '{ "3312": [{ "5850": 0 }] }' )
+        self._send_message("navbar", self.navbarInfoData())
         
 
     def get_api_commands(self):
@@ -315,6 +323,11 @@ class IkeaTradfriPlugin(
                  default_groups=[ADMIN_GROUP],
                  roles=["admins"])
         ]
+
+    @octoprint.plugin.BlueprintPlugin.route("/navbar/info", methods=["GET"])
+    def navbarInfo(self):
+        data = self.navbarInfoData()
+        return flask.make_response(json.dumps(data), 200)
 
     ##Sidebar
 
@@ -410,14 +423,18 @@ class IkeaTradfriPlugin(
             self._logger.error('Failed to get psk key (wizardTryConnect)')
             return flask.make_response("Failed to connect.", 500)
 
-    @octoprint.plugin.BlueprintPlugin.route("/state", methods=["GET"])
-    def getState(self):
+    def getStateData(self):
         data = self.run_gateway_get_request('/15001/{}'.format(self._settings.get(['selected_outlet'])))
         state = data["3312"][0]["5850"]==1
 
         res = dict(
             state=state
         )
+        return res
+
+    @octoprint.plugin.BlueprintPlugin.route("/state", methods=["GET"])
+    def getState(self):
+        res = self.getStateData()
 
         return flask.make_response(json.dumps(res, indent=4), 200)
 
