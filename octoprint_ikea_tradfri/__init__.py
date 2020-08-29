@@ -267,6 +267,8 @@ class IkeaTradfriPlugin(
         self._logger.info("Schedule turn off in %d s" % stopIn)
         self.stopTimer = threading.Timer(stopIn, self.turnOff)
         self.stopTimer.start()
+        
+        self._send_message("sidebar", self.sidebarInfoData())
 
 
     def turnOn(self):
@@ -276,19 +278,22 @@ class IkeaTradfriPlugin(
         if connection_timer >= -1:
             c = threading.Timer(connection_timer,self._printer.connect)
             c.start()
+        self._send_message("sidebar", self.sidebarInfoData())
 
     def turnOff(self):
         self.shutdownAt = None
         if self.stopTimer is not None:
             self.stopTimer.cancel()
             self.stopTimer = None
-
+        
+        self._send_message("sidebar", self.sidebarInfoData())
         if self._printer.is_printing():
             self._logger.info("Don't turn off outlet because printer is printing !")
             return
 
         self._logger.info('stop')
         self.run_gateway_put_request( '/15001/{}'.format(self._settings.get(['selected_outlet'])), '{ "3312": [{ "5850": 0 }] }' )
+        
 
     def get_api_commands(self):
         return dict(
@@ -313,17 +318,22 @@ class IkeaTradfriPlugin(
 
     ##Sidebar
 
-    @octoprint.plugin.BlueprintPlugin.route("/sidebar/info", methods=["GET"])
-    def sidebarInfo(self):
-        data = dict(
+    def sidebarInfoData(self): 
+        return dict(
             shutdownAt=self.shutdownAt
         )
+
+    @octoprint.plugin.BlueprintPlugin.route("/sidebar/info", methods=["GET"])
+    def sidebarInfo(self):
+        data = self.sidebarInfoData()
         return flask.make_response(json.dumps(data), 200)
 
     @octoprint.plugin.BlueprintPlugin.route("/sidebar/postpone", methods=["POST"])
     def sidebarPostponeShutdown(self):
         postponeDelay = self._settings.get(['postponeDelay'])
         self.planStop(postponeDelay)
+
+        self._send_message("sidebar", self.sidebarInfoData())
 
         return self.sidebarInfo()
 
@@ -333,11 +343,13 @@ class IkeaTradfriPlugin(
             self.shutdownAt = None
             self.stopTimer.cancel()
             self.stopTimer = None
+        self._send_message("sidebar", self.sidebarInfoData())
         return self.sidebarInfo()
 
     @octoprint.plugin.BlueprintPlugin.route("/sidebar/shutdownNow", methods=["POST"])
     def sidebarShutdownNow(self):
         self.turnOff()
+        self._send_message("sidebar", self.sidebarInfoData())
         return self.sidebarInfo()
 
     ### Wizard
@@ -426,6 +438,11 @@ class IkeaTradfriPlugin(
         )
 
         return flask.make_response(json.dumps(res, indent=4), 200)
+    
+    def _send_message(self, msg_type, payload):
+        self._plugin_manager.send_plugin_message(
+            self._identifier,
+            dict(type=msg_type, payload=payload))
 
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py

@@ -71,13 +71,13 @@ $(function() {
             return self.settings.getLocalData().plugins.ikea_tradfri.status == "ok";
         };
 
-        self.sideBarInfoInterval = setInterval(function(){
+        /*self.sideBarInfoInterval = setInterval(function(){
             $.ajax({
                 url: BASEURL + "plugin/ikea_tradfri/sidebar/info",
                 type: "GET",
                 dataType: "json"
             }).done(self.onSidebarInfo);
-        }, 1000);
+        }, 1000);*/
 
 
         self.wizardSetCoapPath = function(){
@@ -116,6 +116,15 @@ $(function() {
                 self.wizardError("Error when connection")
             });
         };
+
+        self.onDataUpdaterPluginMessage = function(plugin, msg){
+            if(plugin == 'ikea_tradfri'){
+                if(msg.type == 'sidebar'){
+                    console.log('data', plugin, msg);
+                    self.onSidebarInfo(msg.payload);
+                }
+            }
+        }
 
         self.onSidebarInfo = function(data){
             //console.log("onSidebarInfo ==>", data)
