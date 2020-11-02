@@ -1,0 +1,79 @@
+<form class="form-horizontal">
+    <h1>{{ _("Device configuration") }}</h1>
+
+
+    <div class="control-group">
+        <label class="control-label">{{ _('Device name') }}</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" name="device_name">
+        </div>
+    </div>
+    <div class="control-group" data-bind="visible: statusOk() ">
+        <label class="control-label">{{ _('Ikea Device') }}</label>
+        <div class="controls">
+            <select name="device_id" data-bind="optionsCaption: 'Choose...', optionsText: 'name', optionsValue: 'id', options: settings.settings.plugins.ikea_tradfri.devices">
+            </select>
+        </div>
+    </div>
+
+
+    <h1>{{ _("Event configuration") }}</h1>
+
+    <div class="control-group">
+        <label class="control-label">{{ _('Turn off outlet when print succeeded') }}</label>
+        <div class="controls">
+            <input type="checkbox" id="plugins_ikea_tradfri_on_done" name="on_done" class="input-block-level">
+        </div>
+    </div>
+
+    <div class="control-group">
+        <label class="control-label">{{ _('Turn off outlet when print failed/canceled') }}</label>
+        <div class="controls">
+            <input type="checkbox" id="plugins_ikea_tradfri_on_failed" name="on_failed" class="input-block-level">
+        </div>
+    </div>
+
+    <div class="control-group">
+        <label class="control-label">{{ _('Delay before turn off (in seconds)') }}</label>
+        <div class="controls">
+            <input type="number" min="-1" class="input-block-level" name="stop_timer" >
+            <p><small>{{ _("-1 for disabled") }}</small></p>
+        </div>
+    </div>
+
+    <div class="control-group">
+        <label class="control-label">{{ _('Postpone delay (in seconds)') }}</label>
+        <div class="controls">
+            <input type="number" min="1" class="input-block-level" name="postpone_delay" >
+        </div>
+    </div>
+
+    <h1>{{ _("Auto connect") }}</h1>
+
+    <div class="control-group">
+        <label class="control-label">{{ _('Delay for auto connect (in seconds)') }}</label>
+        <div class="controls">
+            <input type="number" min="-1" class="input-block-level" name="connection_timer" >
+            <p><small>{{ _("-1 for disabled") }}</small></p>
+        </div>
+    </div>
+
+    <h1>{{ _("UI") }}</h1>
+
+    <div class="control-group">
+        <label class="control-label">{{ _('Navbar icon') }}</label>
+        <div class="controls">
+            <input type="text" id="plugins_ikea_tradfri_icon" class="input-block-level" name="icon" >
+            <p><small><a target="_blank" href="https://fontawesome.com/v4.7.0/icons/"> {{ _("Icons list") }} </a></small></p>
+        </div>
+
+    </div>
+
+
+</form>
+
+
+
+{#<div data-bind="visible: statusOk() ">#}
+
+{#</div>#}

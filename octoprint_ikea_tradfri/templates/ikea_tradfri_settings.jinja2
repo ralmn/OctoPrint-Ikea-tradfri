@@ -1,116 +1,95 @@
 <div id="form_ikea_tradfri">
     <div data-bind="visible: settings.loginState.hasPermission(settings.access.permissions.PLUGIN_IKEA_TRADFRI_ADMIN)">
+        <h1>{{ _("General configuration") }}</h1>
+
         <form class="form-horizontal">
-
-            <h1>{{ _("General configuration") }}</h1>
-
             <div class="control-group">
                 <label class="control-label">{{ _('Ikea Gateway IP') }}</label>
                 <div class="controls">
-                    <input type="text" class="input-block-level" data-bind="value: settings.settings.plugins.ikea_tradfri.gateway_ip">
+                    <input type="text" class="input-block-level"
+                           data-bind="value: settings.settings.plugins.ikea_tradfri.gateway_ip">
                 </div>
             </div>
             <div class="control-group">
                 <label class="control-label">{{ _('Ikea Gateway Security Code') }}</label>
                 <div class="controls">
-                    <input type="password" class="input-block-level" data-bind="value: settings.settings.plugins.ikea_tradfri.security_code">
+                    <input type="password" class="input-block-level"
+                           data-bind="value: settings.settings.plugins.ikea_tradfri.security_code">
                 </div>
             </div>
 
             <div class="control-group">
                 <label class="control-label">{{ _('Ikea Gateway Coap bin path') }}</label>
                 <div class="controls">
-                    <input type="text" class="input-block-level" data-bind="value: settings.settings.plugins.ikea_tradfri.coap_path">
+                    <input type="text" class="input-block-level"
+                           data-bind="value: settings.settings.plugins.ikea_tradfri.coap_path">
                 </div>
-            </div>
-            
-
-            <div class="control-group" data-bind="visible: statusOk() ">
-                <label class="control-label">{{ _('Printer outlet') }}</label>
-                <div class="controls">  
-                    <select data-bind="optionsCaption: 'Choose...', value: settings.settings.plugins.ikea_tradfri.selected_outlet, optionsText: 'name', optionsValue: 'id', options: settings.settings.plugins.ikea_tradfri.devices">
-                        
-                    </select>
-                </div>
-
-            </div>        
-            
-            <p data-bind="visible: statusNoDevices()"> {{ _("Successfully connected with your Ikea Gateway but <strong>no outlet found</strong>. Save for rescan")}} </p>
-
-            <p data-bind="visible: statusFailConnection()"> {{_("Connection error with your Ikea Gateway. Save for retry")}} </p>
-
-            <div data-bind="visible: statusWaiting()">
-                <p><strong>{{_("Setup instructions")}}</strong></p>
-                <ol> 
-                    <li>{{_("Set gateway's ip and security")}}</li>
-                    <li>{{_("Save settings")}}</li>
-                    <li>{{_("Choose your outlet")}}</li>
-                </ol>   
-            </div>
-            
-            <div data-bind="visible: statusOk() ">
-
-                <h1>{{_("Event configuration")}}</h1>
-
-                <div class="control-group">
-                    <label class="control-label">{{ _('Turn off outlet when print succeeded') }}</label>
-                    <div class="controls">
-                        <input type="checkbox" id="plugins_ikea_tradfri_on_done" class="input-block-level" data-bind="checked: settings.settings.plugins.ikea_tradfri.on_done">
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label class="control-label">{{ _('Turn off outlet when print failed/canceled') }}</label>
-                    <div class="controls">
-                        <input type="checkbox" id="plugins_ikea_tradfri_on_failed" class="input-block-level" data-bind="checked: settings.settings.plugins.ikea_tradfri.on_failed">
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label class="control-label">{{ _('Delay before turn off (in seconds)') }}</label>
-                    <div class="controls">
-                        <input type="number" min="-1" class="input-block-level" data-bind="value: settings.settings.plugins.ikea_tradfri.stop_timer">
-                        <p><small>{{_("-1 for disabled")}}</small></p>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label class="control-label">{{ _('Postpone delay (in seconds)') }}</label>
-                    <div class="controls">
-                        <input type="number" min="1" class="input-block-level" data-bind="value: settings.settings.plugins.ikea_tradfri.postponeDelay">
-                    </div>
-                </div>
-
-                <h1>{{_("Auto connect")}}</h1>
-
-                <div class="control-group">
-                    <label class="control-label">{{ _('Delay for auto connect (in seconds)') }}</label>
-                    <div class="controls">
-                        <input type="number" min="-1" class="input-block-level" data-bind="value: settings.settings.plugins.ikea_tradfri.connection_timer">
-                        <p><small>{{_("-1 for disabled")}}</small></p>
-                    </div>
-                </div>
-
-                <h1>{{_("UI")}}</h1>
-
-                <div class="control-group">
-                    <label class="control-label">{{ _('Navbar icon') }}</label>
-                    <div class="controls">
-                        <input type="text" id="plugins_ikea_tradfri_icon" class="input-block-level" data-bind="value: settings.settings.plugins.ikea_tradfri.icon">
-                    </div>
-                    <small><a target="_blank" href="https://fontawesome.com/v4.7.0/icons/"> {{_("Icons list")}} </a></small>
-                </div>
-
             </div>
 
         </form>
+
+
+
+        <h1>{{ _("Outlet / Light") }}</h1>
+
+       {##}
+        {#<p data-bind="visible: statusNoDevices()"> {{ _("Successfully connected with your Ikea Gateway but <strong>no outlet found</strong>. Save for rescan") }} </p>#}
+        {##}
+        {#<p data-bind="visible: statusFailConnection()"> {{ _("Connection error with your Ikea Gateway. Save for retry") }} </p>#}
+        {##}
+        {#<div data-bind="visible: statusWaiting()">#}
+        {#    <p><strong>{{ _("Setup instructions") }}</strong></p>#}
+        {#    <ol>#}
+        {#        <li>{{ _("Set gateway's ip and security") }}</li>#}
+        {#        <li>{{ _("Save settings") }}</li>#}
+        {#        <li>{{ _("Choose your outlet") }}</li>#}
+        {#    </ol>#}
+        {#</div>#}
+        {##}
+
+        <table class="table" data-bind="visible: statusOk()">
+            <thead>
+            <tr>
+                <th>{{ _("Name") }}</th>
+                <th>{{ _("Actions") }}</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr data-bind="foreach: settings.settings.plugins.ikea_tradfri.selected_devices">
+                <td data-bind="text: $data.name"></td>
+                <td>
+                    <a href="#" data-bind="click: function(data, event) {$parent.showDeviceDialogEdit($data) }"><i title="{{ _("Edit") }}" class="fa fa-pencil"></i></a>
+                    <a href="#"><i title="{{ _("Duplicate") }}" class="fa fa-copy"></i></a>
+                    <a href="#"><i title="{{ _("Delete") }}" class="fa fa-trash"></i></a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <a href="#" class="btn btn-primary"><i class="fa fa-add"></i>{{ _("Add device") }}</a>
+
     </div>
 
     <div data-bind="visible: !settings.loginState.hasPermission(settings.access.permissions.PLUGIN_IKEA_TRADFRI_ADMIN)">
         <p>{{ _("You don't have permissions to edit settings") }}</p>
     </div>
 
+    <div class="modal fade hide" id="ikea_tradfri_device_modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-body">
+                    {% include "ikea_tradfri_dialog_device.jinja2" %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ _("Cancel") }}</button>
+                    <button type="button" class="btn btn-primary">{{ _("Save") }}</button>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
 
 </div>
- 
-                
+
+

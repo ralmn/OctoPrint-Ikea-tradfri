@@ -99,7 +99,7 @@ $(function() {
         self.getWizardDevices = function(){
             return self.wizardDevices;
         }
-        
+
         self.wizardTryConnect = function(){
             $.ajax({
                 url: BASEURL + "plugin/ikea_tradfri/wizard/tryConnect",
@@ -111,8 +111,8 @@ $(function() {
                 }),
                 contentType: "application/json; charset=UTF-8"
             }).done(function(data) {
-                //console.log('done', data);  
-                self.wizardDevices(JSON.parse(data));              
+                //console.log('done', data);
+                self.wizardDevices(JSON.parse(data));
                 console.log(self.wizardDevices);
                 self.wizardError(null);
             }).fail(function( jqXHR, textStatus, errorThrown) {
@@ -226,6 +226,22 @@ $(function() {
         self.stateOn = function(){
             console.log(self.navInfo(), self.navInfo().state);
             return self.navInfo().state;
+        }
+
+        self.showDeviceDialogEdit = function(device){
+            let dialog = $('#ikea_tradfri_device_modal');
+            dialog.find('[name="device_name"]').val(device.name());
+            dialog.find('[name="device_id"]').val(device.id());
+            dialog.find('[name="on_done"]').val(device.on_done() ? 'on' : 'off');
+            dialog.find('[name="on_failed"]').val(device.on_failed() ? 'on' : 'off');
+            dialog.find('[name="stop_timer"]').val(device.stop_timer());
+            dialog.find('[name="postpone_delay"]').val(device.postpone_delay());
+            dialog.find('[name="connection_timer"]').val(device.connection_timer());
+            dialog.find('[name="icon"]').val(device.icon());
+
+            dialog.modal();
+            console.log('open ?');
+
         }
 
     }
