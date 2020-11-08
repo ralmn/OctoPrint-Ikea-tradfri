@@ -298,7 +298,7 @@ class IkeaTradfriPlugin(
 
     def turnOff(self, device):
         self.shutdownAt[device['id']] = None
-        if self.stopTimer[device['id']] is not None:
+        if device['id'] in self.stopTimer and self.stopTimer[device['id']] is not None:
             self.stopTimer[device['id']].cancel()
             self.stopTimer[device['id']] = None
 
@@ -330,8 +330,16 @@ class IkeaTradfriPlugin(
 
     def get_api_commands(self):
         return dict(
-            turnOn=[], turnOff=[]
+            turnOn=[], turnOff=[], checkStatus=[]
         )
+
+    def getDeviceFromId(self, id):
+        selected_devices = self._settings.get(['selected_devices']);
+        device = None
+        for dev in selected_devices:
+            if dev['id'] == id:
+                return dev
+        return None
 
     def on_api_command(self, command, data):
         # TODO : multi outlet
@@ -339,12 +347,49 @@ class IkeaTradfriPlugin(
         if command == "turnOn":
             if 'dev' in data:
                 self.turnOn(data['dev'])
+            elif 'ip' in data: # Octopod ?
+                device = self.getDeviceFromId(int(data['ip']))
+                if device is None:
+                    pass
+                else:
+                    self.turnOn(device)
+                    status = self.getStateDataById(device['id'])
+                    res = dict(ip=str(device['id']), currentState=("on" if status['state'] else "off"))
+                    return flask.jsonify(res)
             else:
                 self._logger.warn('turn on without device data')
         elif command == "turnOff":
             if 'dev' in data:
                 self.turnOff(data['dev'])
+            elif 'ip' in data: # Octopod ?
+                device = self.getDeviceFromId(int(data['ip']))
+                if device is None:
+                    pass
+                else:
+                    self.turnOff(device)
+                    status = self.getStateDataById(device['id'])
+                    res = dict(ip=str(device['id']), currentState=("on" if status['state'] else "off"))
+                    return flask.jsonify(res)
+            else:
                 self._logger.warn('turn off without device data')
+        elif command == "checkStatus":
+            status = None
+            if 'dev' in data:
+                status = self.getStateDataById(data["dev"]['id'])
+                return flask.jsonify(status)
+            elif 'ip' in data: # Octopod ?
+                device = self.getDeviceFromId(int(data['ip']))
+                if device is None:
+                    pass
+                else:
+                    status = self.getStateDataById(device['id'])
+                    res = dict(ip=str(device['id']), currentState = ("on" if status['state'] else "off"))
+                    return flask.jsonify(res)
+            else:
+                self._logger.warn('checkStatus without device data')
+
+
+
 
     def get_additional_permissions(self):
         return [
