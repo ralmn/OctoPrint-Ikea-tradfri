@@ -511,7 +511,7 @@ class IkeaTradfriPlugin(
             dict(type=msg_type, payload=payload))
 
     def get_settings_version(self):
-        return 2
+        return 3
 
     def on_settings_migrate(self, target, current=None):
         self._logger.info("Update version from {} to {}".format(current, target))
@@ -543,6 +543,15 @@ class IkeaTradfriPlugin(
             self._settings.set(['selected_devices'], devices)
             settings_changed = True
 
+        selected_devices = self._settings.get(['selected_devices'])
+        for dev in selected_devices:
+            if 'nav_icon' not in dev:
+                dev['nav_icon'] = True
+                settings_changed = True
+            if 'nav_name' not in dev:
+                dev['nav_name'] = False
+                settings_changed = True
+        self._settings.set(['selected_devices'], selected_devices)
         if settings_changed:
             self._settings.save()
 

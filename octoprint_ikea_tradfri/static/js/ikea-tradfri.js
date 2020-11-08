@@ -227,12 +227,14 @@ $(function () {
             let dialog = $('#ikea_tradfri_device_modal');
             dialog.find('[name="device_name"]').val(device.name());
             dialog.find('[name="device_id"]').val(device.id());
-            dialog.find('[name="on_done"]').val(device.on_done() ? 'on' : 'off');
-            dialog.find('[name="on_failed"]').val(device.on_failed() ? 'on' : 'off');
+            dialog.find('[name="on_done"]').prop('checked', device.on_done());
+            dialog.find('[name="on_failed"]').prop('checked', device.on_failed());
             dialog.find('[name="stop_timer"]').val(device.stop_timer());
             dialog.find('[name="postpone_delay"]').val(device.postpone_delay());
             dialog.find('[name="connection_timer"]').val(device.connection_timer());
             dialog.find('[name="icon"]').val(device.icon());
+            dialog.find('[name="nav_icon"]').prop('checked', device.nav_icon());
+            dialog.find('[name="nav_name"]').prop('checked', device.nav_name());
 
             dialog.modal();
         }
@@ -240,12 +242,14 @@ $(function () {
             let dialog = $('#ikea_tradfri_device_modal');
             dialog.find('[name="device_name"]').val('Unnamed printer');
             dialog.find('[name="device_id"]').val(-1);
-            dialog.find('[name="on_done"]').val('on');
-            dialog.find('[name="on_failed"]').val('on');
+            dialog.find('[name="on_done"]').prop('checked', true);
+            dialog.find('[name="on_failed"]').prop('checked', true);
             dialog.find('[name="stop_timer"]').val(30);
             dialog.find('[name="postpone_delay"]').val(60);
             dialog.find('[name="connection_timer"]').val(5);
             dialog.find('[name="icon"]').val('plug');
+            dialog.find('[name="nav_icon"]').prop('checked', true);
+            dialog.find('[name="nav_name"]').prop('checked', false);
 
             dialog.modal();
         }
@@ -255,12 +259,14 @@ $(function () {
             let device = {
                 name: dialog.find('[name="device_name"]').val(),
                 id: parseInt(dialog.find('[name="device_id"]').val()),
-                on_done: dialog.find('[name="on_done"]').val() === "on",
-                on_failed: dialog.find('[name="on_failed"]').val() === "on",
+                on_done: dialog.find('[name="on_done"]').prop('checked'),
+                on_failed: dialog.find('[name="on_failed"]').prop('checked'),
                 stop_timer: parseInt(dialog.find('[name="stop_timer"]').val()),
                 postpone_delay: parseInt(dialog.find('[name="postpone_delay"]').val()),
                 connection_timer: parseInt(dialog.find('[name="connection_timer"]').val()),
-                icon: dialog.find('[name="icon"]').val()
+                icon: dialog.find('[name="icon"]').val(),
+                nav_icon: dialog.find('[name="nav_icon"]').prop('checked'),
+                nav_name: dialog.find('[name="nav_name"]').prop('checked'),
             };
 
             $.ajax({
