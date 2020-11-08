@@ -1,14 +1,17 @@
 <div>
-    <div data-bind="visible: sidebarInfoShutdownPlanned()">
-        <p>Shutdown planned at <span data-bind="text: sidebarShutdownAt()"></span></p>
-        <button class="btn btn-secondary" data-bind="enable: !printer.isPrinting(), click: postponeShutdown">{{_("Postpone shutdown for %(postponeDelay)s sec", postponeDelay=plugin_ikea_tradfri_postponeDelay)}}</button>
-        <button class="btn btn-secondary" data-bind="enable: !printer.isPrinting(), click: cancelShutdown">{{_("Cancel scheduled shutdown")}}</button>
-        <button class="btn btn-secondary" data-bind="enable: !printer.isPrinting(), click: shutdownNow">{{_("Shutdown now")}}</button>
+    <!--ko foreach: settings.settings.plugins.ikea_tradfri.selected_devices-->
+    <h4 data-bind="text:$data.name"></h4>
+    <div data-bind="visible: $parent.sidebarInfoShutdownPlanned($data)">
+        <p>Shutdown planned at <span data-bind="text: $parent.sidebarShutdownAt($data)"></span></p>
+        <button class="btn btn-secondary" data-bind="enable: !$parent.printer.isPrinting(), click: $parent.postponeShutdown">{{_("Postpone shutdown for %(postponeDelay)s sec", postponeDelay=plugin_ikea_tradfri_postponeDelay)}}</button>
+        <button class="btn btn-secondary" data-bind="enable: !$parent.printer.isPrinting(), click: $parent.cancelShutdown">{{_("Cancel scheduled shutdown")}}</button>
+        <button class="btn btn-secondary" data-bind="enable: !$parent.printer.isPrinting(), click: $parent.shutdownNow">{{_("Shutdown now")}}</button>
     </div>
-    <div data-bind="visible: !sidebarInfoShutdownPlanned()">
-        <p>No shutdown planned</p>        
-        <button class="btn btn-secondary" data-bind="enable: !printer.isPrinting(), click: postponeShutdown">{{_("Scheduled shutdown in %(postponeDelay)s sec", postponeDelay=plugin_ikea_tradfri_postponeDelay)}}</button>
-        <button class="btn btn-secondary" data-bind="enable: !printer.isPrinting(), click: shutdownNow">{{_("Shutdown now")}}</button>
+    <div data-bind="visible: !$parent.sidebarInfoShutdownPlanned($data)">
+        <p>No shutdown planned</p>
+        <button class="btn btn-secondary" data-bind="enable: !$parent.printer.isPrinting(), click: $parent.postponeShutdown">{{_("Scheduled shutdown in %(postponeDelay)s sec", postponeDelay=plugin_ikea_tradfri_postponeDelay)}}</button>
+        <button class="btn btn-secondary" data-bind="enable: !$parent.printer.isPrinting(), click: $parent.shutdownNow">{{_("Shutdown now")}}</button>
     </div>
+    <!--/ko-->
 
 </div>
