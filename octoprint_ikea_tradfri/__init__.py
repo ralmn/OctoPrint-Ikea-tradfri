@@ -58,8 +58,8 @@ class IkeaTradfriPlugin(
                 return data['9091']
             except ValueError as e:
                 self._logger.error('Fail to get psk token')
-                self._logger.error("stdout: %s" + p.stdout.text)
-                self._logger.error("stderr: %s" + p.stderr.text)
+                self._logger.error("stdout: %s" % p.stdout.text)
+                self._logger.error("stderr: %s" % p.stderr.text)
                 self._logger.error(e)
                 return None
         else:
@@ -209,8 +209,7 @@ class IkeaTradfriPlugin(
         return dict(
             devices=self.devices,
             status=self.status,
-            shutdownAt=self.shutdownAt,  # TODO : multi outlet
-            postponeDelay=self._settings.get(['postponeDelay'])  # TODO : multi outlet
+            shutdownAt=self.shutdownAt,
         )
 
     # ~~ AssetPlugin mixin
@@ -247,13 +246,11 @@ class IkeaTradfriPlugin(
         )
 
     def navbarInfoData(self):
-        # TODO Fix navbar (js/jinja2)
         return dict(
             state=self.getStateData()
         )
 
     def planStop(self, dev, delay):
-        # TODO : multi
         if dev['id'] in self.stopTimer and self.stopTimer[dev['id']] is not None:
             self.stopTimer[dev['id']].cancel()
 
@@ -477,8 +474,6 @@ class IkeaTradfriPlugin(
             return flask.make_response("Expected selected_outlet.", 400)
         selected_outlet = flask.request.json['selected_outlet']
 
-        # TODO : Handle multiple outlet in wizard
-
         dev = dict(
             name="Printer",
             id=selected_outlet,
@@ -492,7 +487,7 @@ class IkeaTradfriPlugin(
             nav_name=False,
             nav_icon=True
         )
-        self._settings.set(['selected_devices'], dev)
+        self._settings.set(['selected_devices'], [dev])
         self._settings.save()
 
         return flask.make_response("OK", 200)
