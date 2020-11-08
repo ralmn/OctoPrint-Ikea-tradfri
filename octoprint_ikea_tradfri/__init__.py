@@ -47,7 +47,7 @@ class IkeaTradfriPlugin(
         coap_path = self._settings.get(["coap_path"])
 
         tradfriHub = 'coaps://{}:5684/{}'.format(gateway_ip, "15011/9063")
-        api = '{} -m post -e {} -u "Client_identity" -k "{}" "{}"'.format(
+        api = '{} -m post -e {} -u "Client_identity" -k "{}" "{}" 2> /dev/null'.format(
             coap_path, "'{ \"9090\":\"" + userId + "\" }'", security_code, tradfriHub)
         # self._logger.info(api)
         if os.path.exists(coap_path):
@@ -96,7 +96,7 @@ class IkeaTradfriPlugin(
             return None
 
         tradfriHub = 'coaps://{}:5684/{}'.format(gateway_ip, path)
-        api = '{} -m get -u "{}" -k "{}" "{}"'.format(coap_path, userId, self.psk,
+        api = '{} -m get -u "{}" -k "{}" "{}" 2> /dev/null'.format(coap_path, userId, self.psk,
                                                       tradfriHub)
 
         if os.path.exists(coap_path):
@@ -144,9 +144,13 @@ class IkeaTradfriPlugin(
                 # self._logger.info(devices[i])
                 dev = self.run_gateway_get_request(
                     '15001/{}'.format(devices[i]))
-                # self._logger.info(dev);
+                #self._logger.info(dev)
                 if '3312' in dev:  # TODO : Add light
                     self.devices.append(dict(id=devices[i], name=dev['9001'], type="Outlet"))
+                    #self._logger.info(dict(id=devices[i], name=dev['9001'], type="Outlet"))
+                elif '3311' in dev:  # Lights
+                    self.devices.append(dict(id=devices[i], name=dev['9001'], type="Light"))
+                    #self._logger.info(dict(id=devices[i], name=dev['9001'], type="Light"))
             if len(self.devices):
                 self.status = 'ok'
             else:
@@ -289,9 +293,8 @@ class IkeaTradfriPlugin(
             '/15001/{}'.format(deviceId), '{ "3312": [{ "5850": 1 }] }')
 
     def turnOnLight(self, deviceId):
-        # TODO
-        self._logger.warn("turnOnLight not implemented")
-        pass
+        self.run_gateway_put_request(
+            '/15001/{}'.format(deviceId), '{ "3311": [{ "5850": 1 }] }')
 
     def turnOff(self, device):
         self.shutdownAt[device['id']] = None
@@ -321,9 +324,8 @@ class IkeaTradfriPlugin(
         self.run_gateway_put_request('/15001/{}'.format(deviceId), '{ "3312": [{ "5850": 0 }] }')
 
     def turnOffLight(self, deviceId):
-        # TODO
-        self._logger.warn("turnOffLight not implemented")
-        pass
+        self.run_gateway_put_request(
+            '/15001/{}'.format(deviceId), '{ "3311": [{ "5850": 0 }] }')
 
     def get_api_commands(self):
         return dict(
@@ -524,6 +526,11 @@ class IkeaTradfriPlugin(
             return flask.make_response("Missing device", 400)
 
         device = flask.request.json['device']
+
+        for ikDev in self.devices:
+            if ikDev['id'] == device['id']:
+                device['type'] = ikDev['type']
+
         selected_devices = self._settings.get(['selected_devices'])
         index = -1
         for i in range(len(selected_devices)):
@@ -551,8 +558,15 @@ class IkeaTradfriPlugin(
         return res
 
     def getStateDataById(self, device_id):
+
+        device = self.getDeviceFromId(device_id)
+
+        code = "3312"
+        if device is not None and device['type'] is not None and device['type'] != "Outlet": #Light
+            code = "3311"
+
         data = self.run_gateway_get_request('/15001/{}'.format(device_id))
-        state = data["3312"][0]["5850"] == 1
+        state = data[code][0]["5850"] == 1
 
         res = dict(
             state=state
