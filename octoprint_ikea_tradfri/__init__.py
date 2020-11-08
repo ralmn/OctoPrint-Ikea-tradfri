@@ -623,6 +623,18 @@ class IkeaTradfriPlugin(
         if settings_changed:
             self._settings.save()
 
+    def on_event(self, event, payload):
+        devices = self._settings.get(['selected_devices'])
+        for dev in devices:
+            schedule_stop = False
+            if event == 'PrintDone' and dev['on_done']:
+                schedule_stop = True
+            if event == 'PrintFailed' and dev['on_failed']:
+                schedule_stop = True
+            if schedule_stop:
+                stop_timer = int(dev['stop_timer'])
+                self.planStop(dev, stop_timer)
+
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
