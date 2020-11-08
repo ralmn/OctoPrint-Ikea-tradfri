@@ -186,12 +186,23 @@ class IkeaTradfriPlugin(
     # ~~ TemplatePlugin mixin
 
     def get_template_configs(self):
-        return [
-            dict(type="navbar", custom_bindings=True, classes=["dropdown"]),
+        configs = [
             dict(type="settings", custom_bindings=True),
             dict(type="wizard", custom_bindings=True),
             dict(type="sidebar", custom_bindings=True)
         ]
+        devices = self._settings.get(['selected_devices'])
+        for i in range(len(devices)):
+            item = dict(
+                type="navbar",
+                custom_bindings=True,
+                suffix="_"+str(devices[i]['id']),
+                data_bind="let: {idev: " + str(i) + ", dev: settings.settings.plugins.ikea_tradfri.selected_devices()["+ str(i) +"] }",
+                classes=["dropdown navbar_plugin_ikea_tradfri"]
+            )
+            configs.append(item)
+
+        return configs
 
     def get_template_vars(self):
         return dict(
@@ -259,7 +270,7 @@ class IkeaTradfriPlugin(
         self._send_message("sidebar", self.sidebarInfoData())
 
     def turnOn(self, device):
-        if device['type'] == 'Outlet':
+        if 'type' not in device or device['type'] == 'Outlet':
             self.turnOnOutlet(device['id'])
         else:
             self.turnOnLight(device['id'])
@@ -295,7 +306,7 @@ class IkeaTradfriPlugin(
             return
 
         self._logger.debug('stop')
-        if device['type'] == 'Outlet':
+        if 'type' not in device or device['type'] == 'Outlet':
             self.turnOffOutlet(device['id'])
         else:
             self.turnOffLight(device['id'])
@@ -317,10 +328,15 @@ class IkeaTradfriPlugin(
     def on_api_command(self, command, data):
         # TODO : multi outlet
         import flask
-        # if command == "turnOn":
-        #     self.turnOn()
-        # elif command == "turnOff":
-        #     self.turnOff()
+        if command == "turnOn":
+            if 'dev' in data:
+                self.turnOn(data['dev'])
+            else:
+                self._logger.warn('turn on without device data')
+        elif command == "turnOff":
+            if 'dev' in data:
+                self.turnOff(data['dev'])
+                self._logger.warn('turn off without device data')
 
     def get_additional_permissions(self):
         return [
@@ -448,6 +464,29 @@ class IkeaTradfriPlugin(
             self._logger.error('Failed to get psk key (wizardTryConnect)')
             return flask.make_response("Failed to connect.", 500)
 
+    @octoprint.plugin.BlueprintPlugin.route("/device/save", methods=["POST"])
+    def saveDevice(self):
+        if not "device" in flask.request.json:
+            return flask.make_response("Missing device", 400)
+
+        device = flask.request.json['device']
+        selected_devices = self._settings.get(['selected_devices'])
+        index = -1
+        for i in range(len(selected_devices)):
+            dev = selected_devices[i]
+            if dev['id'] == device['id']:
+                index = i
+                break
+        if index >= 0:
+            selected_devices[index] = device
+        else:
+            selected_devices.append(device)
+
+        self._settings.set(['selected_devices'], selected_devices)
+        self._settings.save()
+
+        return flask.make_response(json.dumps(selected_devices, indent=4), 200)
+
     def getStateData(self):
         res = dict()
 
@@ -476,6 +515,7 @@ class IkeaTradfriPlugin(
 
     def on_settings_migrate(self, target, current=None):
         self._logger.info("Update version from {} to {}".format(current, target))
+        settings_changed = False
 
         if current is None or current < 2:
             currentOutletId = self._settings.get(['selected_outlet'])
@@ -501,7 +541,11 @@ class IkeaTradfriPlugin(
                 )
             ]
             self._settings.set(['selected_devices'], devices)
+            settings_changed = True
+
+        if settings_changed:
             self._settings.save()
+
 
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py

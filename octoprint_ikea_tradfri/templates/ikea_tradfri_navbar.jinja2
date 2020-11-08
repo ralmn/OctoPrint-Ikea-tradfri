@@ -1,9 +1,14 @@
-<a href="javascript:void(0)" title="Ikea Tradfri" class="dropdown-toggle" data-toggle="dropdown" data-bind="visible: canDisplayNavbar()">
-    <i data-bind="attr: {'class': iconClass}"></i>
+<a href="javascript:void(0)" title="Ikea Tradfri"
+   class="dropdown-toggle" data-toggle="dropdown">
+    <i data-bind="attr: {'class': iconClass(dev)}"></i>
     {# <i class="state state-on" data-bind="visible: stateOn()"></i> #}
     <b class="caret"></b>
 </a>
 <ul class="dropdown-menu">
-    <li><a class="action_plugin_ikea_tradfri" href="javascript:void(0)" data-bind="click: turnOn">{{_("Turn on outlet")}}</a></li>
-    <li><a  class="action_plugin_ikea_tradfri" href="javascript:void(0)" data-bind="click: turnOff">{{_("Turn off outlet")}}</a></li>
+    <li><a class="action_plugin_ikea_tradfri" href="javascript:void(0)"
+           data-bind="click: turnOn.bind($data, dev)">{{ _("Turn on outlet") }}</a></li>
+    <li><a class="action_plugin_ikea_tradfri" href="javascript:void(0)"
+           data-bind="click: turnOff.bind($data, dev)">{{ _("Turn off outlet") }}</a></li>
+
 </ul>
+

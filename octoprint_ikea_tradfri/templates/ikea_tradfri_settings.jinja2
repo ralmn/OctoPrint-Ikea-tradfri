@@ -55,7 +55,8 @@
             </tr>
             </thead>
             <tbody>
-            <tr data-bind="foreach: settings.settings.plugins.ikea_tradfri.selected_devices">
+            <!--ko foreach: settings.settings.plugins.ikea_tradfri.selected_devices-->
+            <tr data-bind="">
                 <td data-bind="text: $data.name"></td>
                 <td>
                     <a href="#" data-bind="click: function(data, event) {$parent.showDeviceDialogEdit($data) }"><i title="{{ _("Edit") }}" class="fa fa-pencil"></i></a>
@@ -63,10 +64,11 @@
                     <a href="#"><i title="{{ _("Delete") }}" class="fa fa-trash"></i></a>
                 </td>
             </tr>
+            <!--/ko-->
             </tbody>
         </table>
 
-        <a href="#" class="btn btn-primary"><i class="fa fa-add"></i>{{ _("Add device") }}</a>
+        <a href="#" class="btn btn-primary" data-bind="click: showDeviceDialogNew"><i class="fa fa-add"></i>{{ _("Add device") }}</a>
 
     </div>
 
@@ -82,7 +84,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ _("Cancel") }}</button>
-                    <button type="button" class="btn btn-primary">{{ _("Save") }}</button>
+                    <button type="button" class="btn btn-primary" data-bind="click: saveDeviceDialog">{{ _("Save") }}</button>
                 </div>
             </div>
 
