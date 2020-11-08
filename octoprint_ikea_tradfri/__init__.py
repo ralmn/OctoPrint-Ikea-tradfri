@@ -214,6 +214,7 @@ class IkeaTradfriPlugin(
             devices=self.devices,
             status=self.status,
             shutdownAt=self.shutdownAt,
+            hasPalette2= 'palette2' in self._plugin_manager.enabled_plugins
         )
 
     # ~~ AssetPlugin mixin
@@ -275,6 +276,14 @@ class IkeaTradfriPlugin(
 
         self._send_message("sidebar", self.sidebarInfoData())
 
+    def connect_palette2(self):
+        try:
+            palette2Plugin = self._plugin_manager.plugins['palette2'].implementation
+            palette2Plugin.palette.connectOmega(None)
+        except:
+            self._logger.error('Failed to connect to palette')
+
+
     def turnOn(self, device):
         if 'type' not in device or device['type'] == 'Outlet':
             self.turnOnOutlet(device['id'])
@@ -282,8 +291,15 @@ class IkeaTradfriPlugin(
             self.turnOnLight(device['id'])
 
         connection_timer = int(device['connection_timer'])
+
+        def connect():
+            if 'connect_palette2' in device and device['connect_palette2']:
+                self.connect_palette2()
+            else:
+                self._printer.connect()
+
         if connection_timer >= -1:
-            c = threading.Timer(connection_timer, self._printer.connect)
+            c = threading.Timer(connection_timer, connect)
             c.start()
         self._send_message("sidebar", self.sidebarInfoData())
         self._send_message("navbar", self.navbarInfoData())
@@ -579,7 +595,7 @@ class IkeaTradfriPlugin(
             dict(type=msg_type, payload=payload))
 
     def get_settings_version(self):
-        return 3
+        return 4
 
     def on_settings_migrate(self, target, current=None):
         self._logger.info("Update version from {} to {}".format(current, target))
@@ -618,6 +634,9 @@ class IkeaTradfriPlugin(
                 settings_changed = True
             if 'nav_name' not in dev:
                 dev['nav_name'] = False
+                settings_changed = True
+            if 'connect_palette2' not in dev:
+                dev['connect_palette2'] = False
                 settings_changed = True
         self._settings.set(['selected_devices'], selected_devices)
         if settings_changed:

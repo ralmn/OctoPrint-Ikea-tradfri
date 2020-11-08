@@ -11,7 +11,8 @@
     <div class="control-group" data-bind="visible: statusOk() ">
         <label class="control-label">{{ _('Ikea Device') }}</label>
         <div class="controls">
-            <select name="device_id" data-bind="optionsCaption: 'Choose...', optionsText: 'name', optionsValue: 'id', options: settings.settings.plugins.ikea_tradfri.devices">
+            <select name="device_id"
+                    data-bind="optionsCaption: 'Choose...', optionsText: 'name', optionsValue: 'id', options: settings.settings.plugins.ikea_tradfri.devices">
             </select>
         </div>
     </div>
@@ -36,7 +37,7 @@
     <div class="control-group">
         <label class="control-label">{{ _('Delay before turn off (in seconds)') }}</label>
         <div class="controls">
-            <input type="number" min="-1" class="input-block-level" name="stop_timer" >
+            <input type="number" min="-1" class="input-block-level" name="stop_timer">
             <p><small>{{ _("-1 for disabled") }}</small></p>
         </div>
     </div>
@@ -44,7 +45,7 @@
     <div class="control-group">
         <label class="control-label">{{ _('Postpone delay (in seconds)') }}</label>
         <div class="controls">
-            <input type="number" min="1" class="input-block-level" name="postpone_delay" >
+            <input type="number" min="1" class="input-block-level" name="postpone_delay">
         </div>
     </div>
 
@@ -53,37 +54,46 @@
     <div class="control-group">
         <label class="control-label">{{ _('Delay for auto connect (in seconds)') }}</label>
         <div class="controls">
-            <input type="number" min="-1" class="input-block-level" name="connection_timer" >
+            <input type="number" min="-1" class="input-block-level" name="connection_timer">
             <p><small>{{ _("-1 for disabled") }}</small></p>
         </div>
     </div>
+
+    {% if plugin_ikea_tradfri_hasPalette2 %}
+        <div class="control-group">
+            <label class="control-label">{{ _('Auto connect palette 2 instead of printer') }}</label>
+            <div class="controls">
+                <input type="checkbox" class="input-block-level" name="connect_palette2">
+            </div>
+        </div>
+    {% endif %}
 
     <h1>{{ _("UI") }}</h1>
 
     <div class="control-group">
         <label class="control-label">{{ _('Navbar icon') }}</label>
         <div class="controls">
-            <input type="text" id="plugins_ikea_tradfri_icon" class="input-block-level" name="icon" >
-            <p><small><a target="_blank" href="https://fontawesome.com/v4.7.0/icons/"> {{ _("Icons list") }} </a></small></p>
+            <input type="text" id="plugins_ikea_tradfri_icon" class="input-block-level" name="icon">
+            <p><small><a target="_blank"
+                         href="https://fontawesome.com/v4.7.0/icons/"> {{ _("Icons list") }} </a></small></p>
         </div>
     </div>
 
     <div class="control-group">
         <label class="control-label">{{ _('Navbar show icon') }}</label>
         <div class="controls">
-            <input type="checkbox" id="plugins_ikea_tradfri_nav_icon" class="input-block-level" name="nav_icon" >
+            <input type="checkbox" id="plugins_ikea_tradfri_nav_icon" class="input-block-level" name="nav_icon">
         </div>
     </div>
 
     <div class="control-group">
         <label class="control-label">{{ _('Navbar show name') }}</label>
         <div class="controls">
-            <input type="checkbox" id="plugins_ikea_tradfri_nav_name" class="input-block-level" name="nav_name" >
+            <input type="checkbox" id="plugins_ikea_tradfri_nav_name" class="input-block-level" name="nav_name">
         </div>
     </div>
 
 </form>
-
 
 
 {#<div data-bind="visible: statusOk() ">#}

@@ -228,6 +228,7 @@ $(function () {
             dialog.find('[name="icon"]').val(device.icon());
             dialog.find('[name="nav_icon"]').prop('checked', device.nav_icon());
             dialog.find('[name="nav_name"]').prop('checked', device.nav_name());
+            dialog.find('[name="connect_palette2"]').prop('checked', device.connect_palette2 && device.connect_palette2());
 
             dialog.modal();
         }
@@ -243,6 +244,9 @@ $(function () {
             dialog.find('[name="icon"]').val('plug');
             dialog.find('[name="nav_icon"]').prop('checked', true);
             dialog.find('[name="nav_name"]').prop('checked', false);
+            let connect_palette2 = dialog.find('[name="connect_palette2"]');
+            if(connect_palette2)
+                connect_palette2.prop('checked', false);
 
             dialog.modal();
         }
@@ -259,8 +263,12 @@ $(function () {
                 connection_timer: parseInt(dialog.find('[name="connection_timer"]').val()),
                 icon: dialog.find('[name="icon"]').val(),
                 nav_icon: dialog.find('[name="nav_icon"]').prop('checked'),
-                nav_name: dialog.find('[name="nav_name"]').prop('checked'),
+                nav_name: dialog.find('[name="nav_name"]').prop('checked')
             };
+            let connect_palette2 = dialog.find('[name="connect_palette2"]');
+            if(connect_palette2) {
+                device.connect_palette2 = connect_palette2.prop('checked');
+            }
 
             $.ajax({
                 url: BASEURL + "plugin/ikea_tradfri/device/save",
