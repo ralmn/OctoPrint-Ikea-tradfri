@@ -40,8 +40,8 @@ class IkeaTradfriPlugin(
     devices = []
     status = 'waiting'
     error_message = ''
-    shutdownAt = None
-    stopTimer = None
+    shutdownAt = dict()
+    stopTimer = dict()
 
     def _auth(self, gateway_ip, security_code):
         coap_path = self._settings.get(["coap_path"])
@@ -196,8 +196,9 @@ class IkeaTradfriPlugin(
             item = dict(
                 type="navbar",
                 custom_bindings=True,
-                suffix="_"+str(devices[i]['id']),
-                data_bind="let: {idev: " + str(i) + ", dev: settings.settings.plugins.ikea_tradfri.selected_devices()["+ str(i) +"] }",
+                suffix="_" + str(devices[i]['id']),
+                data_bind="let: {idev: " + str(
+                    i) + ", dev: settings.settings.plugins.ikea_tradfri.selected_devices()[" + str(i) + "] }",
                 classes=["dropdown navbar_plugin_ikea_tradfri"]
             )
             configs.append(item)
@@ -251,21 +252,25 @@ class IkeaTradfriPlugin(
             state=self.getStateData()
         )
 
-    def planStop(self, delay):
+    def planStop(self, dev, delay):
         # TODO : multi
-        if self.stopTimer is not None:
-            self.stopTimer.cancel()
+        if dev['id'] in self.stopTimer and self.stopTimer[dev['id']] is not None:
+            self.stopTimer[dev['id']].cancel()
 
         now = math.ceil(time.time())
 
-        if self.shutdownAt is not None:
-            self.shutdownAt += delay
+        if self.shutdownAt[dev['id']] is not None:
+            self.shutdownAt[dev['id']] += delay
         else:
-            self.shutdownAt = now + delay
-        stopIn = (self.shutdownAt - now)
+            self.shutdownAt[dev['id']] = now + delay
+        stopIn = (self.shutdownAt[dev['id']] - now)
         self._logger.info("Schedule turn off in %d s" % stopIn)
-        self.stopTimer = threading.Timer(stopIn, self.turnOff)
-        self.stopTimer.start()
+
+        def wrapper():
+            self.turnOff(dev)
+
+        self.stopTimer[dev['id']] = threading.Timer(stopIn, wrapper)
+        self.stopTimer[dev['id']].start()
 
         self._send_message("sidebar", self.sidebarInfoData())
 
@@ -292,17 +297,20 @@ class IkeaTradfriPlugin(
         pass
 
     def turnOff(self, device):
-        self.shutdownAt = None
-        if self.stopTimer is not None:
-            self.stopTimer.cancel()
-            self.stopTimer = None
+        self.shutdownAt[device['id']] = None
+        if self.stopTimer[device['id']] is not None:
+            self.stopTimer[device['id']].cancel()
+            self.stopTimer[device['id']] = None
 
         self._send_message("sidebar", self.sidebarInfoData())
         if self._printer.is_printing():
             self._logger.info("Don't turn off outlet because printer is printing !")
             return
-        elif self._printer.is_pausing():
+        elif self._printer.is_pausing() or self._printer.is_paused():
             self._logger.info("Don't turn off outlet because printer is in pause !")
+            return
+        elif self._printer.is_cancelling():
+            self._logger.info("Don't turn off outlet because printer is cancelling !")
             return
 
         self._logger.debug('stop')
@@ -355,6 +363,11 @@ class IkeaTradfriPlugin(
     ##Sidebar
 
     def sidebarInfoData(self):
+        selected_devices = self._settings.get(['selected_devices'])
+        for dev in selected_devices:
+            if dev['id'] not in self.shutdownAt:
+                self.shutdownAt[dev['id']] = None
+
         return dict(
             shutdownAt=self.shutdownAt
         )
@@ -368,8 +381,9 @@ class IkeaTradfriPlugin(
     @octoprint.plugin.BlueprintPlugin.route("/sidebar/postpone", methods=["POST"])
     def sidebarPostponeShutdown(self):
         # TODO multi timer
-        postponeDelay = self._settings.get(['postponeDelay'])
-        self.planStop(postponeDelay)
+        dev = flask.request.json['dev']
+        postponeDelay = dev['postpone_delay']
+        self.planStop(dev, postponeDelay)
 
         self._send_message("sidebar", self.sidebarInfoData())
 
@@ -377,18 +391,18 @@ class IkeaTradfriPlugin(
 
     @octoprint.plugin.BlueprintPlugin.route("/sidebar/cancelShutdown", methods=["POST"])
     def sidebarCancelShutdown(self):
-        # TODO multi timer
-        if self.stopTimer is not None:
-            self.shutdownAt = None
-            self.stopTimer.cancel()
-            self.stopTimer = None
+        device = flask.request.json['dev']
+        if self.stopTimer[device['id']] is not None:
+            self.shutdownAt[device['id']] = None
+            self.stopTimer[device['id']].cancel()
+            self.stopTimer[device['id']] = None
         self._send_message("sidebar", self.sidebarInfoData())
         return self.sidebarInfo()
 
     @octoprint.plugin.BlueprintPlugin.route("/sidebar/shutdownNow", methods=["POST"])
     def sidebarShutdownNow(self):
-        #TODO
-        self.turnOff()
+        device = flask.request.json['dev']
+        self.turnOff(device)
         self._send_message("sidebar", self.sidebarInfoData())
         return self.sidebarInfo()
 
@@ -554,7 +568,6 @@ class IkeaTradfriPlugin(
         self._settings.set(['selected_devices'], selected_devices)
         if settings_changed:
             self._settings.save()
-
 
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py

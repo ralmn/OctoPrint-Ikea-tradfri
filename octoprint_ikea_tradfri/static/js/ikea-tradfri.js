@@ -20,7 +20,7 @@ $(function () {
         self.wizardError = ko.observable(null);
 
         self.sidebarInfo = ko.observable({
-            shutdownAt: null
+            shutdownAt: {}
         });
 
         self.navInfo = ko.observable({
@@ -147,12 +147,12 @@ $(function () {
             //console.log("onSidebarInfo <== ", self.sidebarInfo())
         };
 
-        self.sidebarShutdownAt = function () {
-            return new Date(self.sidebarInfo().shutdownAt * 1000).toLocaleTimeString();
+        self.sidebarShutdownAt = function (dev) {
+            return new Date((self.sidebarInfo().shutdownAt[dev.id()] || 0) * 1000).toLocaleTimeString();
         }
 
-        self.sidebarInfoShutdownPlanned = function () {
-            return self.sidebarInfo().shutdownAt != null
+        self.sidebarInfoShutdownPlanned = function (dev) {
+            return self.sidebarInfo() && self.sidebarInfo().shutdownAt[dev.id()] != null
         }
 
         self.postponeShutdown = function () {
@@ -160,10 +160,9 @@ $(function () {
                 url: BASEURL + "plugin/ikea_tradfri/sidebar/postpone",
                 type: "POST",
                 dataType: "json",
-                // data: JSON.stringify({
-                //     securityCode: $('#wizardIkeaTradfriSecurityCode').val(),
-                //     gateway: $('#wizardIkeaTradfriGateway').val()
-                // }),
+                data: JSON.stringify({
+                    dev: ko.toJS(this)
+                }),
                 contentType: "application/json; charset=UTF-8"
             }).done(self.onSidebarInfo).fail(function (jqXHR, textStatus, errorThrown) {
                 //console.log('error',  jqXHR, textStatus, errorThrown);
@@ -176,10 +175,9 @@ $(function () {
                 url: BASEURL + "plugin/ikea_tradfri/sidebar/cancelShutdown",
                 type: "POST",
                 dataType: "json",
-                // data: JSON.stringify({
-                //     securityCode: $('#wizardIkeaTradfriSecurityCode').val(),
-                //     gateway: $('#wizardIkeaTradfriGateway').val()
-                // }),
+                data: JSON.stringify({
+                    dev: ko.toJS(this)
+                }),
                 contentType: "application/json; charset=UTF-8"
             }).done(self.onSidebarInfo).fail(function (jqXHR, textStatus, errorThrown) {
                 //console.log('error',  jqXHR, textStatus, errorThrown);
@@ -192,10 +190,9 @@ $(function () {
                 url: BASEURL + "plugin/ikea_tradfri/sidebar/shutdownNow",
                 type: "POST",
                 dataType: "json",
-                // data: JSON.stringify({
-                //     securityCode: $('#wizardIkeaTradfriSecurityCode').val(),
-                //     gateway: $('#wizardIkeaTradfriGateway').val()
-                // }),
+                data: JSON.stringify({
+                    dev: ko.toJS(this)
+                }),
                 contentType: "application/json; charset=UTF-8"
             }).done(self.onSidebarInfo).fail(function (jqXHR, textStatus, errorThrown) {
                 //console.log('error',  jqXHR, textStatus, errorThrown);
@@ -218,10 +215,6 @@ $(function () {
             return true;
         };
 
-        self.stateOn = function () {
-            console.log(self.navInfo(), self.navInfo().state);
-            return self.navInfo().state;
-        }
 
         self.showDeviceDialogEdit = function (device) {
             let dialog = $('#ikea_tradfri_device_modal');
