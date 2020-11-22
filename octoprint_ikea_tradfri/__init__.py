@@ -606,7 +606,7 @@ class IkeaTradfriPlugin(
             stopTimer = self._settings.get(['stop_timer']) or 30
             postponeDelay = self._settings.get(['postponeDelay']) or 30
             connectionTimer = self._settings.get(['connection_timer']) or 5
-            on_done = self._settings.get(['on_done']) or True
+            on_done = self._settings.get(['on_done']) or False
             on_failed = self._settings.get(['on_failed']) or False
             icon = self._settings.get(['icon']) or "plug"
             devices = [
