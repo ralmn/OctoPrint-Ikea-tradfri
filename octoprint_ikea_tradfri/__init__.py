@@ -564,6 +564,28 @@ class IkeaTradfriPlugin(
 
         return flask.make_response(json.dumps(selected_devices, indent=4), 200)
 
+    @octoprint.plugin.BlueprintPlugin.route("/device/delete", methods=["POST"])
+    def deleteDevice(self):
+        if not "device_id" in flask.request.json:
+            return flask.make_response("Missing device", 400)
+
+        device_id = flask.request.json['device_id']
+
+        selected_devices = self._settings.get(['selected_devices'])
+        index = -1
+        for i in range(len(selected_devices)):
+            dev = selected_devices[i]
+            if dev['id'] == device_id:
+                index = i
+                break
+        if index >= 0:
+            selected_devices.remove(selected_devices[index])
+
+        self._settings.set(['selected_devices'], selected_devices)
+        self._settings.save()
+
+        return flask.make_response(json.dumps(selected_devices, indent=4), 200)
+
     def getStateData(self):
         res = dict()
 

@@ -1,3 +1,4 @@
+<!-- ko if: dev-->
 <a href="javascript:void(0)" title="Ikea Tradfri"
    class="dropdown-toggle" data-toggle="dropdown">
     <!-- ko if: dev.nav_name-->
@@ -15,4 +16,4 @@
            data-bind="click: turnOff.bind($data, dev)">{{ _("Turn off outlet") }}</a></li>
 
 </ul>
-
+<!--/ko-->

@@ -232,6 +232,7 @@ $(function () {
 
             dialog.modal();
         }
+
         self.showDeviceDialogNew = function (device) {
             let dialog = $('#ikea_tradfri_device_modal');
             dialog.find('[name="device_name"]').val('Unnamed printer');
@@ -278,10 +279,38 @@ $(function () {
                     device: device
                 }),
                 contentType: "application/json; charset=UTF-8"
+            }).then((data) =>{
+                let deviceObs = {}
+                for(let key in device){
+                    deviceObs[key] = ko.observable(device[key]);
+                }
+                self.settings.settings.plugins.ikea_tradfri.selected_devices.push(deviceObs);
             });
 
             dialog.modal('hide');
 
+        }
+
+
+        self.deleteDevice = function (device) {
+            let deviceId = device.id();
+
+
+            $.ajax({
+                url: BASEURL + "plugin/ikea_tradfri/device/delete",
+                type: "POST",
+                //dataType: "json",
+                data: JSON.stringify({
+                    device_id: deviceId
+                }),
+                contentType: "application/json; charset=UTF-8"
+            }).then((data) =>{
+                self.settings.settings.plugins.ikea_tradfri.selected_devices(
+                    self.settings.settings.plugins.ikea_tradfri.selected_devices.remove(device)
+                )
+
+            });
+            return true;
         }
 
     }
