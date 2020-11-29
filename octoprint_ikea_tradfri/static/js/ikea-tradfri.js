@@ -215,8 +215,11 @@ $(function () {
             return true;
         };
 
+        let currentDevice = null;
 
         self.showDeviceDialogEdit = function (device) {
+            currentDevice = device;
+
             let dialog = $('#ikea_tradfri_device_modal');
             dialog.find('[name="device_name"]').val(device.name());
             dialog.find('[name="device_id"]').val(device.id());
@@ -233,7 +236,9 @@ $(function () {
             dialog.modal();
         }
 
+
         self.showDeviceDialogNew = function (device) {
+            currentDevice = null;
             let dialog = $('#ikea_tradfri_device_modal');
             dialog.find('[name="device_name"]').val('Unnamed printer');
             dialog.find('[name="device_id"]').val(-1);
@@ -284,7 +289,12 @@ $(function () {
                 for(let key in device){
                     deviceObs[key] = ko.observable(device[key]);
                 }
-                self.settings.settings.plugins.ikea_tradfri.selected_devices.push(deviceObs);
+                if(currentDevice){
+                    self.settings.settings.plugins.ikea_tradfri.selected_devices.replace(currentDevice, deviceObs);
+                }else{
+                    self.settings.settings.plugins.ikea_tradfri.selected_devices.push(deviceObs);
+                }
+
             });
 
             dialog.modal('hide');
@@ -295,7 +305,6 @@ $(function () {
         self.deleteDevice = function (device) {
             let deviceId = device.id();
 
-
             $.ajax({
                 url: BASEURL + "plugin/ikea_tradfri/device/delete",
                 type: "POST",
@@ -305,10 +314,7 @@ $(function () {
                 }),
                 contentType: "application/json; charset=UTF-8"
             }).then((data) =>{
-                self.settings.settings.plugins.ikea_tradfri.selected_devices(
-                    self.settings.settings.plugins.ikea_tradfri.selected_devices.remove(device)
-                )
-
+                self.settings.settings.plugins.ikea_tradfri.selected_devices.remove(device)
             });
             return true;
         }
