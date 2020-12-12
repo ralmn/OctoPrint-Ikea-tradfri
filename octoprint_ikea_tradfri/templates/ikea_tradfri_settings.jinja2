@@ -67,6 +67,10 @@
             </tbody>
         </table>
 
+        <div data-bind="visible: reloadRequired" class="alert alert-danger" role="alert">
+          {{ _("Reload required (F5) !") }}
+        </div>
+
         <a href="#" class="btn btn-primary" data-bind="click: showDeviceDialogNew"><i class="fa fa-add"></i>{{ _("Add device") }}</a>
 
     </div>

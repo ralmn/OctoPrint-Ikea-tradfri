@@ -27,6 +27,8 @@ $(function () {
             state: false
         });
 
+        self.reloadRequired = ko.observable(false);
+
 
         self.iconClass = function (dev) {
             let info = self.navInfo().state[dev.id()];
@@ -291,6 +293,9 @@ $(function () {
                 }
                 if(currentDevice){
                     self.settings.settings.plugins.ikea_tradfri.selected_devices.replace(currentDevice, deviceObs);
+                    if(currentDevice.nav_icon() != deviceObs.nav_icon() || currentDevice.nav_name() != deviceObs.nav_name()){
+                        self.reloadRequired(true);
+                    }
                 }else{
                     self.settings.settings.plugins.ikea_tradfri.selected_devices.push(deviceObs);
                 }

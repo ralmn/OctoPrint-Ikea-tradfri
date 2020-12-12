@@ -197,14 +197,18 @@ class IkeaTradfriPlugin(
         ]
         devices = self._settings.get(['selected_devices'])
         for i in range(len(devices)):
+            dev = devices[i]
+            hidden = not dev['nav_name'] and not dev['nav_icon']
             item = dict(
                 type="navbar",
                 custom_bindings=True,
-                suffix="_" + str(devices[i]['id']),
+                suffix="_" + str(dev['id']),
                 data_bind="let: {idev: " + str(
                     i) + ", dev: settings.settings.plugins.ikea_tradfri.selected_devices()[" + str(i) + "] }",
                 classes=["dropdown navbar_plugin_ikea_tradfri"]
             )
+            if hidden:
+                item['classes'].append("navbar_plugin_ikea_tradfri_hidden")
             configs.append(item)
 
         return configs
@@ -601,7 +605,7 @@ class IkeaTradfriPlugin(
         device = self.getDeviceFromId(device_id)
 
         code = "3312"
-        if device is not None and device['type'] is not None and device['type'] != "Outlet": #Light
+        if device is not None and 'type' in device and device['type'] is not None and device['type'] != "Outlet": #Light
             code = "3311"
 
         data = self.run_gateway_get_request('/15001/{}'.format(device_id))

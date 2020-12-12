@@ -15,3 +15,7 @@
 .state-icon.state-off {
     color: #990202;
 }
+
+.navbar_plugin_ikea_tradfri_hidden {
+    display: none;
+}
