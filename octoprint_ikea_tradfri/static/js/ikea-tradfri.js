@@ -29,7 +29,7 @@ $(function () {
 
 
         self.iconClass = function (dev) {
-            let info = self.navInfo().state[dev.name()];
+            let info = self.navInfo().state[dev.id()];
             return "fa fa-" + dev.icon() + " state-icon " + (info && info.state ? 'state-on' : 'state-off');
         };
 

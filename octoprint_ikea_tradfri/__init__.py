@@ -301,6 +301,7 @@ class IkeaTradfriPlugin(
         if connection_timer >= -1:
             c = threading.Timer(connection_timer, connect)
             c.start()
+
         self._send_message("sidebar", self.sidebarInfoData())
         self._send_message("navbar", self.navbarInfoData())
 
@@ -591,7 +592,7 @@ class IkeaTradfriPlugin(
 
         selected_devices = self._settings.get(['selected_devices'])
         for device in selected_devices:
-            res[device['name']] = self.getStateDataById(device['id'])
+            res[device['id']] = self.getStateDataById(device['id'])
 
         return res
 
@@ -612,6 +613,7 @@ class IkeaTradfriPlugin(
         return res
 
     def _send_message(self, msg_type, payload):
+        self._logger.info("send message type {}".format(msg_type))
         self._plugin_manager.send_plugin_message(
             self._identifier,
             dict(type=msg_type, payload=payload))
