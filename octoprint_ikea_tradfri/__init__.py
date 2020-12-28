@@ -49,7 +49,7 @@ class IkeaTradfriPlugin(
         tradfriHub = 'coaps://{}:5684/{}'.format(gateway_ip, "15011/9063")
         api = '{} -m post -e {} -u "Client_identity" -k "{}" "{}" 2> /dev/null'.format(
             coap_path, "'{ \"9090\":\"" + userId + "\" }'", security_code, tradfriHub)
-        # self._logger.info(api)
+        self._logger.debug(api)
         if os.path.exists(coap_path):
             p = capture_stdout(api)
             result = p.stdout.text
@@ -98,7 +98,7 @@ class IkeaTradfriPlugin(
         tradfriHub = 'coaps://{}:5684/{}'.format(gateway_ip, path)
         api = '{} -m get -u "{}" -k "{}" "{}" 2> /dev/null'.format(coap_path, userId, self.psk,
                                                       tradfriHub)
-
+        self._logger.debug(api)
         if os.path.exists(coap_path):
             p = capture_stdout(api)
             result = p.stdout.text
@@ -122,7 +122,7 @@ class IkeaTradfriPlugin(
         tradfriHub = 'coaps://{}:5684/{}'.format(gateway_ip, path)
         api = '{} -m put -e \'{}\' -u "{}" -k "{}" "{}" 2>/dev/null'.format(
             coap_path, data, userId, self.psk, tradfriHub)
-        # self._logger.info(api)
+        self._logger.debug(api)
         if os.path.exists(coap_path):
             p = capture_stdout(api)
             result = p.stdout.text
