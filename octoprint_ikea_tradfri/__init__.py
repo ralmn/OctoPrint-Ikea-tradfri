@@ -1,6 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import asyncio
+import concurrent.futures
+import json
+import math
+import threading
+import time
+import uuid
+
+import aiocoap
+import flask
 # (Don't forget to remove me)
 # This is a basic skeleton for your plugin's __init__.py. You probably want to adjust the class name of your plugin
 # as well as the plugin mixins it's subclassing from. This is really just a basic skeleton to get you started,
@@ -9,24 +19,11 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 #
 # Take a look at the documentation on what other plugin mixins are available.
 import octoprint.plugin
-from octoprint.access import ADMIN_GROUP
-from octoprint.access.permissions import Permissions
-
-import sys
-import os
-import json
-import threading
-import uuid
-import flask
-import time
-import math
-#from sarge import capture_both
+# from sarge import capture_both
 from flask_babel import gettext
+from octoprint.access import ADMIN_GROUP
+
 from . import cli
-
-import aiocoap
-import asyncio, concurrent.futures
-
 
 userId = str(uuid.uuid1())[:8]
 
@@ -50,7 +47,7 @@ class IkeaTradfriPlugin(
 
     async def _auth(self, gateway_ip, security_code):
         context = await aiocoap.Context.create_client_context()
-        context.log.setLevel(level="DEBUG")
+        # context.log.setLevel(level="DEBUG")
         context.client_credentials.load_from_dict({
             ('coaps://{}:5684/*'.format(gateway_ip)) : {
                 'dtls':  {
@@ -120,7 +117,7 @@ class IkeaTradfriPlugin(
         uri = 'coaps://{}:5684/{}'.format(gateway_ip, path)
 
         context = await aiocoap.Context.create_client_context()
-        context.log.setLevel(level="DEBUG")
+        # context.log.setLevel(level="DEBUG")
         context.client_credentials.load_from_dict({
             ('coaps://{}:5684/*'.format(gateway_ip)): {
                 'dtls': {
@@ -170,7 +167,7 @@ class IkeaTradfriPlugin(
         uri = 'coaps://{}:5684/{}'.format(gateway_ip, path)
 
         context = await aiocoap.Context.create_client_context()
-        context.log.setLevel(level="DEBUG")
+        # context.log.setLevel(level="DEBUG")
         context.client_credentials.load_from_dict({
             ('coaps://{}:5684/*'.format(gateway_ip)): {
                 'dtls': {
