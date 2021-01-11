@@ -588,8 +588,12 @@ class IkeaTradfriPlugin(
             userId = str(uuid.uuid1())[:8]
             self.psk = None
 
-        psk = self.pool.submit(asyncio.run, self._auth(gateway_ip=gateway, security_code=securityCode)).result()
-        self.psk = psk
+        try:
+            psk = self.pool.submit(asyncio.run, self._auth(gateway_ip=gateway, security_code=securityCode)).result(timeout=30)
+        except Exception as e:
+            self._logger.warn("wizzard : Error on try auth")
+        else:
+            self.psk = psk
 
         if self.psk is not None:
             self._settings.set(['security_code'], securityCode)
