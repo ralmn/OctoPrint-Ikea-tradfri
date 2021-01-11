@@ -20,9 +20,13 @@ import uuid
 import flask
 import time
 import math
-from sarge import capture_both, capture_both
+#from sarge import capture_both
 from flask_babel import gettext
 from . import cli
+
+import aiocoap
+import asyncio, concurrent.futures
+
 
 userId = str(uuid.uuid1())[:8]
 
@@ -42,38 +46,51 @@ class IkeaTradfriPlugin(
     error_message = ''
     shutdownAt = dict()
     stopTimer = dict()
+    pool = concurrent.futures.ThreadPoolExecutor()
 
-    def _auth(self, gateway_ip, security_code):
-        coap_path = self._settings.get(["coap_path"])
+    async def _auth(self, gateway_ip, security_code):
+        context = await aiocoap.Context.create_client_context()
+        context.log.setLevel(level="DEBUG")
+        context.client_credentials.load_from_dict({
+            ('coaps://{}:5684/*'.format(gateway_ip)) : {
+                'dtls':  {
+                    'psk': security_code.encode(),
+                    'client-identity': b"Client_identity"
+                }
+            }
+        })
 
-        tradfriHub = 'coaps://{}:5684/{}'.format(gateway_ip, "15011/9063")
-        api = '{} -m post -e {} -u "Client_identity" -k "{}" "{}" 2> /dev/null'.format(
-            coap_path, "'{ \"9090\":\"" + userId + "\" }'", security_code, tradfriHub)
-        self._logger.debug(api)
-        if os.path.exists(coap_path):
-            p = capture_both(api)
-            result = p.stdout.text
-            try:
-                data = json.loads(result.strip('\n'))
-                return data['9091']
-            except ValueError as e:
-                self._logger.error('Fail to get psk token')
-                self._logger.error("stdout: %s" % p.stdout.text)
-                self._logger.error("stderr: %s" % p.stderr.text)
-                self._logger.error(e)
-                return None
+        payload = dict()
+        payload["9090"] = userId
+        payload = json.dumps(payload)
+
+        uri = 'coaps://{}:5684/{}'.format(gateway_ip, "15011/9063")
+        req = aiocoap.Message(code=aiocoap.Code.POST, uri= uri, payload=payload.encode())
+
+        try:
+            response = await context.request(req).response
+        except Exception as e:
+            self._logger.error('auth(): Failed to fetch resource:')
+            self._logger.error(e)
         else:
-            self._logger.error('[-] libcoap: could not find libcoap.\n')
-            self.status = 'connection_failled'
-            self.error_message = 'libcoap: could not find libcoap'
-            self.save_settings()
-            return None
+            self._logger.info('Result: %s\n%r' % (response.code, response.payload))
+            try:
+                resPayload = json.loads(response.payload)
+            except ValueError as e:
+                self._logger.error("Failed to parse auth response")
+                self._logger.error(e)
+            else:
+                return resPayload["9091"] if "9091" in resPayload else None
 
-    def auth(self):
+        return None
+
+    async def auth(self):
         gateway_ip = self._settings.get(["gateway_ip"])
         security_code = self._settings.get(["security_code"])
 
-        return self._auth(gateway_ip, security_code)
+        # token = self.pool.submit(asyncio.run, self._auth(gateway_ip, security_code)).result()
+        # return token
+        return await self._auth(gateway_ip, security_code)
 
     def save_settings(self):
         self._settings.set(['status'], self.status)
@@ -83,53 +100,110 @@ class IkeaTradfriPlugin(
         self._logger.info('Settings saved')
         self._logger.info(self._settings.get(['status']))
 
+
     def run_gateway_get_request(self, path):
+        res = self.pool.submit(asyncio.run, self._run_gateway_get_request(path)).result()
+        return res
+
+    async def _run_gateway_get_request(self, path):
         gateway_ip = self._settings.get(["gateway_ip"])
-        coap_path = self._settings.get(["coap_path"])
+        # coap_path = self._settings.get(["coap_path"])
 
         if self.psk is None:
-            self.psk = self.auth()
+            self.psk = await self.auth()
         if self.psk is None:
             self.status = 'connection_failled'
             self._logger.error('Failed to get psk key (run_gateway_get_request)')
             self.save_settings()
             return None
 
-        tradfriHub = 'coaps://{}:5684/{}'.format(gateway_ip, path)
-        api = '{} -m get -u "{}" -k "{}" "{}" 2> /dev/null'.format(coap_path, userId, self.psk,
-                                                      tradfriHub)
-        self._logger.debug(api)
-        if os.path.exists(coap_path):
-            p = capture_both(api)
-            result = p.stdout.text
-        else:
-            self._logger.error('[-] libcoap: could not find libcoap.\n')
+        uri = 'coaps://{}:5684/{}'.format(gateway_ip, path)
 
-        return json.loads(result.strip('\n'))
+        context = await aiocoap.Context.create_client_context()
+        context.log.setLevel(level="DEBUG")
+        context.client_credentials.load_from_dict({
+            ('coaps://{}:5684/*'.format(gateway_ip)): {
+                'dtls': {
+                    'psk': self.psk.encode(),
+                    'client-identity': userId.encode()
+                }
+            }
+        })
+
+        #self._logger.debug(api)
+
+        req = aiocoap.Message(code=aiocoap.Code.GET, uri=uri)
+
+        try:
+            response = await context.request(req).response
+        except Exception as e:
+            self._logger.error('_run_gateway_get_request(): Failed to fetch resource:')
+            self._logger.error(e)
+        else:
+            self._logger.info('Result: %s\n%r' % (response.code, response.payload))
+            try:
+                resPayload = json.loads(response.payload)
+            except ValueError as e:
+                self._logger.error("Failed to parse auth response")
+                self._logger.error(e)
+            else:
+                return resPayload
+
+        return None
 
     def run_gateway_put_request(self, path, data):
-        gateway_ip = self._settings.get(["gateway_ip"])
-        coap_path = self._settings.get(["coap_path"])
+        res = self.pool.submit(asyncio.run, self._run_gateway_put_request(path, data)).result()
+        return res
 
-        if (self.psk == None):
-            self.psk = self.auth()
+    async def _run_gateway_put_request(self, path, data):
+        gateway_ip = self._settings.get(["gateway_ip"])
+        # coap_path = self._settings.get(["coap_path"])
+
+        if self.psk is None:
+            self.psk = await self.auth()
         if self.psk is None:
             self.status = 'connection_failled'
-            self._logger.error('Failed to get psk key (run_gateway_put_request)')
+            self._logger.error('Failed to get psk key (run_gateway_get_request)')
             self.save_settings()
             return None
 
-        tradfriHub = 'coaps://{}:5684/{}'.format(gateway_ip, path)
-        api = '{} -m put -e \'{}\' -u "{}" -k "{}" "{}" 2>/dev/null'.format(
-            coap_path, data, userId, self.psk, tradfriHub)
-        self._logger.debug(api)
-        if os.path.exists(coap_path):
-            p = capture_both(api)
-            result = p.stdout.text
-        else:
-            self._logger.error('[-] libcoap: could not find libcoap.\n')
+        uri = 'coaps://{}:5684/{}'.format(gateway_ip, path)
 
-        return True
+        context = await aiocoap.Context.create_client_context()
+        context.log.setLevel(level="DEBUG")
+        context.client_credentials.load_from_dict({
+            ('coaps://{}:5684/*'.format(gateway_ip)): {
+                'dtls': {
+                    'psk': self.psk.encode(),
+                    'client-identity': userId.encode()
+                }
+            }
+        })
+
+        # self._logger.debug(api)
+        if isinstance(data, str):
+            payload = data
+        else:
+            payload = json.dumps(data)
+
+        req = aiocoap.Message(code=aiocoap.Code.PUT, uri=uri, payload=payload.encode())
+
+        try:
+            response = await context.request(req).response
+        except Exception as e:
+            self._logger.error('_run_gateway_put_request(): Failed to fetch resource:')
+            self._logger.error(e)
+        else:
+            self._logger.info('Result: %s\n%r' % (response.code, response.payload))
+            try:
+                resPayload = json.loads(response.payload)
+            except ValueError as e:
+                self._logger.error("Failed to parse auth response")
+                self._logger.error(e)
+            else:
+                return resPayload
+
+        return None
 
     def loadDevices(self, startup=False):
         gateway_ip = self._settings.get(["gateway_ip"])
