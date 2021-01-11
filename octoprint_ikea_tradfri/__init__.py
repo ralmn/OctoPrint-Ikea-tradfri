@@ -20,7 +20,7 @@ import uuid
 import flask
 import time
 import math
-from sarge import capture_stdout
+from sarge import capture_both, capture_both
 from flask_babel import gettext
 from . import cli
 
@@ -51,7 +51,7 @@ class IkeaTradfriPlugin(
             coap_path, "'{ \"9090\":\"" + userId + "\" }'", security_code, tradfriHub)
         self._logger.debug(api)
         if os.path.exists(coap_path):
-            p = capture_stdout(api)
+            p = capture_both(api)
             result = p.stdout.text
             try:
                 data = json.loads(result.strip('\n'))
@@ -100,7 +100,7 @@ class IkeaTradfriPlugin(
                                                       tradfriHub)
         self._logger.debug(api)
         if os.path.exists(coap_path):
-            p = capture_stdout(api)
+            p = capture_both(api)
             result = p.stdout.text
         else:
             self._logger.error('[-] libcoap: could not find libcoap.\n')
@@ -124,7 +124,7 @@ class IkeaTradfriPlugin(
             coap_path, data, userId, self.psk, tradfriHub)
         self._logger.debug(api)
         if os.path.exists(coap_path):
-            p = capture_stdout(api)
+            p = capture_both(api)
             result = p.stdout.text
         else:
             self._logger.error('[-] libcoap: could not find libcoap.\n')
