@@ -87,7 +87,8 @@ class IkeaTradfriPlugin(
 
         # token = self.pool.submit(asyncio.run, self._auth(gateway_ip, security_code)).result()
         # return token
-        return await self._auth(gateway_ip, security_code)
+        token = await self._auth(gateway_ip, security_code)
+        return token
 
     def save_settings(self):
         self._settings.set(['status'], self.status)
@@ -104,7 +105,6 @@ class IkeaTradfriPlugin(
 
     async def _run_gateway_get_request(self, path):
         gateway_ip = self._settings.get(["gateway_ip"])
-        # coap_path = self._settings.get(["coap_path"])
 
         if self.psk is None:
             self.psk = await self.auth()
@@ -154,7 +154,6 @@ class IkeaTradfriPlugin(
 
     async def _run_gateway_put_request(self, path, data):
         gateway_ip = self._settings.get(["gateway_ip"])
-        # coap_path = self._settings.get(["coap_path"])
 
         if self.psk is None:
             self.psk = await self.auth()
@@ -254,7 +253,6 @@ class IkeaTradfriPlugin(
             status='',
             error_message='',
             devices=[],
-            coap_path='/usr/local/bin/coap-client',
             config_version_key=1
         )
 
@@ -552,15 +550,7 @@ class IkeaTradfriPlugin(
     def get_wizard_version(self):
         return 1
 
-    @octoprint.plugin.BlueprintPlugin.route("/wizard/coap_path", methods=["POST"])
-    def wizardSetCoapPath(self):
-        if not "coap_path" in flask.request.json:
-            return flask.make_response("Expected coap_path.", 400)
-        coap_path = flask.request.json['coap_path']
-        self._settings.set(['coap_path'], coap_path)
-        self._settings.save()
 
-        return flask.make_response("OK", 200)
 
     @octoprint.plugin.BlueprintPlugin.route("/wizard/setOutlet", methods=["POST"])
     def wizardSetOutlet(self):
@@ -598,7 +588,8 @@ class IkeaTradfriPlugin(
             userId = str(uuid.uuid1())[:8]
             self.psk = None
 
-        self.psk = self._auth(gateway, securityCode)
+        psk = self.pool.submit(asyncio.run, self._auth(gateway_ip=gateway, security_code=securityCode)).result()
+        self.psk = psk
 
         if self.psk is not None:
             self._settings.set(['security_code'], securityCode)

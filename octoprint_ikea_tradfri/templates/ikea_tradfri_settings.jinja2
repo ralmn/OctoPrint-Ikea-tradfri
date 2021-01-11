@@ -18,34 +18,11 @@
                 </div>
             </div>
 
-            <div class="control-group">
-                <label class="control-label">{{ _('Ikea Gateway Coap bin path') }}</label>
-                <div class="controls">
-                    <input type="text" class="input-block-level"
-                           data-bind="value: settings.settings.plugins.ikea_tradfri.coap_path">
-                </div>
-            </div>
-
         </form>
 
 
 
         <h1>{{ _("Outlet / Light") }}</h1>
-
-       {##}
-        {#<p data-bind="visible: statusNoDevices()"> {{ _("Successfully connected with your Ikea Gateway but <strong>no outlet found</strong>. Save for rescan") }} </p>#}
-        {##}
-        {#<p data-bind="visible: statusFailConnection()"> {{ _("Connection error with your Ikea Gateway. Save for retry") }} </p>#}
-        {##}
-        {#<div data-bind="visible: statusWaiting()">#}
-        {#    <p><strong>{{ _("Setup instructions") }}</strong></p>#}
-        {#    <ol>#}
-        {#        <li>{{ _("Set gateway's ip and security") }}</li>#}
-        {#        <li>{{ _("Save settings") }}</li>#}
-        {#        <li>{{ _("Choose your outlet") }}</li>#}
-        {#    </ol>#}
-        {#</div>#}
-        {##}
 
         <table class="table" data-bind="visible: statusOk()">
             <thead>
