@@ -80,18 +80,7 @@ $(function () {
             return self.settings.getLocalData().plugins.ikea_tradfri.status == "ok";
         };
 
-        self.wizardSetCoapPath = function () {
-            $.ajax({
-                url: BASEURL + "plugin/ikea_tradfri/wizard/coap_path",
-                type: "POST",
-                dataType: "json",
-                data: JSON.stringify({
-                    coap_path: $('#wizardIkeaTradfriCoapPath').val()
-                }),
-                contentType: "application/json; charset=UTF-8"
-            }).done(function (data) {
-            });
-        };
+
 
         self.getWizardDevices = function () {
             return self.wizardDevices;

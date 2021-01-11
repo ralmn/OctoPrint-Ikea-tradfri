@@ -6,31 +6,18 @@
         <h2>{{_('Step 1: Connection')}}</h2>
 
         <div class="control-group">
-            <label class="control-label">{{ _('Coap bin path') }}</label>
-            <div class="controls">
-                <input type="text" class="input-block-level"  id="wizardIkeaTradfriCoapPath" data-bind="value: settings.settings.plugins.ikea_tradfri.coap_path">
-            </div>
-
-            <small>{{ _('Coap install instruction: ') }} <a target="_blank" href="https://github.com/ralmn/OctoPrint-Ikea-tradfri">{{ _('here') }}</a></small>
-        </div> 
-
-        <button class="btn" data-bind="click: wizardSetCoapPath">{{_('Update Coap path')}}</button>
-
-        
-
-        <div class="control-group">
             <label class="control-label">{{ _('Ikea Gateway IP') }}</label>
             <div class="controls">
                 <input type="text" class="input-block-level"  id="wizardIkeaTradfriGateway" data-bind="value: settings.settings.plugins.ikea_tradfri.gateway_ip">
             </div>
-        </div> 
+        </div>
 
         <div class="control-group">
             <label class="control-label">{{ _('Ikea Gateway security code') }}</label>
             <div class="controls">
                 <input type="password" class="input-block-level"  id="wizardIkeaTradfriSecurityCode" data-bind="value: settings.settings.plugins.ikea_tradfri.security_code">
             </div>
-        </div> 
+        </div>
 
 
         <span data-bind="visible: wizardError(), text: wizardError()"></span>
@@ -46,7 +33,7 @@
 
         <div class="control-group">
             <label class="control-label">{{ _('Printer outlet') }}</label>
-            <div class="controls">  
+            <div class="controls">
                 <select id="wizardIkeaTradfriDevices" data-bind="optionsCaption: 'Choose...', optionsText: 'name', optionsValue: 'id', options: wizardDevices()"></select>
             </div>
         </div>

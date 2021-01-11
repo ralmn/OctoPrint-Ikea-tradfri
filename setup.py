@@ -14,7 +14,7 @@ plugin_package = "octoprint_ikea_tradfri"
 plugin_name = "OctoPrint Ikea Tradfri"
 
 # The plugin's version. Can be overwritten within OctoPrint's internal data via __plugin_version__ in the plugin module
-plugin_version = "1.4.4"
+plugin_version = "1.4.5-dev"
 
 # The plugin's description. Can be overwritten within OctoPrint's internal data via __plugin_description__ in the plugin
 # module
@@ -33,7 +33,7 @@ plugin_url = "https://github.com/ralmn/OctoPrint-Ikea-tradfri"
 plugin_license = "AGPLv3"
 
 # Any additional requirements besides OctoPrint should be listed here
-plugin_requires = ["sarge"]
+plugin_requires = ["sarge", "aiocoap[all] @ https://github.com/chrysn/aiocoap/archive/master.zip"]
 
 ### --------------------------------------------------------------------------------------------------------------------
 ### More advanced options that you usually shouldn't have to touch follow after this point
@@ -59,7 +59,8 @@ plugin_ignored_packages = []
 # Example:
 #     plugin_requires = ["someDependency==dev"]
 #     additional_setup_parameters = {"dependency_links": ["https://github.com/someUser/someRepo/archive/master.zip#egg=someDependency-dev"]}
-additional_setup_parameters = {}
+additional_setup_parameters = {
+}
 
 ########################################################################################################################
 
