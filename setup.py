@@ -14,7 +14,7 @@ plugin_package = "octoprint_ikea_tradfri"
 plugin_name = "OctoPrint Ikea Tradfri"
 
 # The plugin's version. Can be overwritten within OctoPrint's internal data via __plugin_version__ in the plugin module
-plugin_version = "1.5.1-dev"
+plugin_version = "1.5.4-dev"
 
 
 # The plugin's description. Can be overwritten within OctoPrint's internal data via __plugin_description__ in the plugin
@@ -61,6 +61,7 @@ plugin_ignored_packages = []
 #     plugin_requires = ["someDependency==dev"]
 #     additional_setup_parameters = {"dependency_links": ["https://github.com/someUser/someRepo/archive/master.zip#egg=someDependency-dev"]}
 additional_setup_parameters = {
+    "python_requires": ">3,<4"
 }
 
 ########################################################################################################################
