@@ -70,7 +70,7 @@ class IkeaTradfriPlugin(
             self._logger.error('auth(): Failed to fetch resource:')
             self._logger.error(e)
         else:
-            self._logger.info('Result: %s\n%r' % (response.code, response.payload))
+            self._logger.debug('Result: %s\n%r' % (response.code, response.payload))
             try:
                 resPayload = json.loads(response.payload)
             except ValueError as e:
@@ -95,8 +95,7 @@ class IkeaTradfriPlugin(
         self._settings.set(['error_message'], self.error_message)
         self._settings.set(['devices'], self.devices)
         self._settings.save()
-        self._logger.info('Settings saved')
-        self._logger.info(self._settings.get(['status']))
+        self._logger.debug('Settings saved')
 
 
     def run_gateway_get_request(self, path):
@@ -137,7 +136,7 @@ class IkeaTradfriPlugin(
             self._logger.error('_run_gateway_get_request(): Failed to fetch resource:')
             self._logger.error(e)
         else:
-            self._logger.info('Result: %s\n%r' % (response.code, response.payload))
+            self._logger.debug('Result: %s\n%r' % (response.code, response.payload))
             try:
                 resPayload = json.loads(response.payload)
             except ValueError as e:
@@ -190,7 +189,7 @@ class IkeaTradfriPlugin(
             self._logger.error('_run_gateway_put_request(): Failed to fetch resource:')
             self._logger.error(e)
         else:
-            self._logger.info('Result: %s\n%r' % (response.code, response.payload))
+            self._logger.debug('Result: %s\n%r' % (response.code, response.payload))
             try:
                 resPayload = json.loads(response.payload)
             except ValueError as e:
@@ -205,28 +204,24 @@ class IkeaTradfriPlugin(
         gateway_ip = self._settings.get(["gateway_ip"])
         security_code = self._settings.get(["security_code"])
         if gateway_ip != "" and security_code != "":
-            self._logger.info('load devices')
+            self._logger.debug('load devices')
             devices = self.run_gateway_get_request('15001')
             if devices is None:
                 return
             self.devices = []
             for i in range(len(devices)):
-                # self._logger.info(devices[i])
                 dev = self.run_gateway_get_request(
                     '15001/{}'.format(devices[i]))
-                #self._logger.info(dev)
                 if '3312' in dev:  # TODO : Add light
                     self.devices.append(dict(id=devices[i], name=dev['9001'], type="Outlet"))
-                    #self._logger.info(dict(id=devices[i], name=dev['9001'], type="Outlet"))
                 elif '3311' in dev:  # Lights
                     self.devices.append(dict(id=devices[i], name=dev['9001'], type="Light"))
-                    #self._logger.info(dict(id=devices[i], name=dev['9001'], type="Light"))
             if len(self.devices):
                 self.status = 'ok'
             else:
                 self.status = 'no_devices'
         else:
-            self._logger.info("No security code or gateway ip")
+            self._logger.warn("No security code or gateway ip")
         self.save_settings()
 
     def on_settings_save(self, data):
@@ -394,13 +389,13 @@ class IkeaTradfriPlugin(
 
         self._send_message("sidebar", self.sidebarInfoData())
         if self._printer.is_printing():
-            self._logger.info("Don't turn off outlet because printer is printing !")
+            self._logger.warn("Don't turn off outlet because printer is printing !")
             return
         elif self._printer.is_pausing() or self._printer.is_paused():
-            self._logger.info("Don't turn off outlet because printer is in pause !")
+            self._logger.warn("Don't turn off outlet because printer is in pause !")
             return
         elif self._printer.is_cancelling():
-            self._logger.info("Don't turn off outlet because printer is cancelling !")
+            self._logger.warn("Don't turn off outlet because printer is cancelling !")
             return
 
         self._logger.debug('stop')
@@ -688,7 +683,7 @@ class IkeaTradfriPlugin(
         return res
 
     def _send_message(self, msg_type, payload):
-        self._logger.info("send message type {}".format(msg_type))
+        self._logger.debug("send message type {}".format(msg_type))
         self._plugin_manager.send_plugin_message(
             self._identifier,
             dict(type=msg_type, payload=payload))
