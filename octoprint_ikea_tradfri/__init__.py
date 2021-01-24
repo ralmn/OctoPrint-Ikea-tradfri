@@ -607,6 +607,11 @@ class IkeaTradfriPlugin(
             self._logger.error('Failed to get psk key (wizardTryConnect)')
             return flask.make_response("Failed to connect.", 500)
 
+    @octoprint.plugin.BlueprintPlugin.route("/devices", methods=["GET"])
+    def listDevices(self):
+        self.loadDevices()
+        return flask.make_response(json.dumps(self.devices, indent=4), 200)
+
     @octoprint.plugin.BlueprintPlugin.route("/device/save", methods=["POST"])
     def saveDevice(self):
         if not "device" in flask.request.json:

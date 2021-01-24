@@ -30,6 +30,8 @@ $(function () {
         self.reloadRequired = ko.observable(false);
 
 
+        self.devices = ko.observable([])
+
         self.iconClass = function (dev) {
             let info = self.navInfo().state[dev.id()];
             return "fa fa-" + dev.icon() + " state-icon " + (info && info.state ? 'state-on' : 'state-off');
@@ -206,10 +208,26 @@ $(function () {
             return true;
         };
 
+        self.getDevices = function () {
+            $.ajax({
+                url: BASEURL + "plugin/ikea_tradfri/devices",
+                type: "GET",
+                dataType: "json",
+                contentType: "application/json; charset=UTF-8"
+            }).done((res) => {
+                self.devices(res);
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                //console.log('error',  jqXHR, textStatus, errorThrown);
+                self.wizardError("Error when get devices")
+            });
+        }
+
         let currentDevice = null;
 
         self.showDeviceDialogEdit = function (device) {
             currentDevice = device;
+
+            self.getDevices();
 
             let dialog = $('#ikea_tradfri_device_modal');
             dialog.find('[name="device_name"]').val(device.name());
@@ -230,6 +248,9 @@ $(function () {
 
         self.showDeviceDialogNew = function (device) {
             currentDevice = null;
+
+            self.getDevices();
+
             let dialog = $('#ikea_tradfri_device_modal');
             dialog.find('[name="device_name"]').val('Unnamed printer');
             dialog.find('[name="device_id"]').val(-1);
