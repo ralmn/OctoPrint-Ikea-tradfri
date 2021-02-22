@@ -671,11 +671,17 @@ class IkeaTradfriPlugin(
         device = self.getDeviceFromId(device_id)
 
         code = "3312"
+
+        if device is None:
+            return dict(state=False)
+
         if device is not None and 'type' in device and device['type'] is not None and device['type'] != "Outlet": #Light
             code = "3311"
 
         data = self.run_gateway_get_request('/15001/{}'.format(device_id))
-        state = data[code][0]["5850"] == 1
+        state = False
+        if code in data and len(data[code]) > 0 and "5850" in data[code][0]:
+            state = data[code][0]["5850"] == 1
 
         res = dict(
             state=state

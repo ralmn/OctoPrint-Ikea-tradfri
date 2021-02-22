@@ -12,7 +12,7 @@
         <label class="control-label">{{ _('Ikea Device') }}</label>
         <div class="controls">
             <select name="device_id"
-                    data-bind="optionsCaption: 'Choose...', optionsText: 'name', optionsValue: 'id', options: devices">
+                    data-bind="optionsCaption: 'Choose...', optionsText: 'name', optionsValue: 'id', options: devices, value: deviceIdEdit, valueAllowUnset: true">
             </select>
         </div>
     </div>

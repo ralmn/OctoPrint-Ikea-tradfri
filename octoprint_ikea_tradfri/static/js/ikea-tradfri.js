@@ -32,6 +32,8 @@ $(function () {
 
         self.devices = ko.observable([])
 
+        self.deviceIdEdit = ko.observable(-1);
+
         self.iconClass = function (dev) {
             let info = self.navInfo().state[dev.id()];
             return "fa fa-" + dev.icon() + " state-icon " + (info && info.state ? 'state-on' : 'state-off');
@@ -243,6 +245,7 @@ $(function () {
             dialog.find('[name="connect_palette2"]').prop('checked', device.connect_palette2 && device.connect_palette2());
 
             dialog.modal();
+            self.deviceIdEdit(device.id());
         }
 
 
@@ -254,6 +257,7 @@ $(function () {
             let dialog = $('#ikea_tradfri_device_modal');
             dialog.find('[name="device_name"]').val('Unnamed printer');
             dialog.find('[name="device_id"]').val(-1);
+            self.deviceIdEdit(-1);
             dialog.find('[name="on_done"]').prop('checked', true);
             dialog.find('[name="on_failed"]').prop('checked', true);
             dialog.find('[name="stop_timer"]').val(30);
