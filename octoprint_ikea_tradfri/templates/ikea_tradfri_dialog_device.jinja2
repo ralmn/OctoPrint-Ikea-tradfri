@@ -35,6 +35,16 @@
     </div>
 
     <div class="control-group">
+        <label class="control-label">{{ _('Turn off mode') }}</label>
+        <div class="controls">
+            <select name="turn_off_mode" id="plugins_ikea_tradfri_turn_off_mode" data-bind="event: {change: dialogOnTurnOffModeChange}">
+                <option value="time">{{ _('Time') }}</option>
+                <option value="cooldown">{{ _('Cooldown') }}</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="control-group" id="plugins_ikea_tradfri_grp_stop_timer">
         <label class="control-label">{{ _('Delay before turn off (in seconds)') }}</label>
         <div class="controls">
             <input type="number" min="-1" class="input-block-level" name="stop_timer">
@@ -42,10 +52,25 @@
         </div>
     </div>
 
-    <div class="control-group">
+    <div class="control-group" id="plugins_ikea_tradfri_grp_postpone_delay">
         <label class="control-label">{{ _('Postpone delay (in seconds)') }}</label>
         <div class="controls">
             <input type="number" min="1" class="input-block-level" name="postpone_delay">
+        </div>
+    </div>
+
+    <div class="control-group" id="plugins_ikea_tradfri_grp_cooldown_hotend">
+        <label class="control-label">{{ _('Hotend temperature') }}</label>
+        <div class="controls">
+            <input type="number" min="-1" class="input-block-level" name="cooldown_hotend">
+        </div>
+    </div>
+
+    <div class="control-group" id="plugins_ikea_tradfri_grp_cooldown_bed">
+        <label class="control-label">{{ _('Bed temperature') }}</label>
+        <div class="controls">
+            <input type="number" min="1" class="input-block-level" name="cooldown_bed">
+            <p><small>{{ _("-1 for disabled") }}</small></p>
         </div>
     </div>
 

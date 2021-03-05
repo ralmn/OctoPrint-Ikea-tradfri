@@ -43,14 +43,15 @@ class IkeaTradfriPlugin(
     error_message = ''
     shutdownAt = dict()
     stopTimer = dict()
+    stopCooldown = dict()
     pool = concurrent.futures.ThreadPoolExecutor()
 
     async def _auth(self, gateway_ip, security_code):
         context = await aiocoap.Context.create_client_context()
         # context.log.setLevel(level="DEBUG")
         context.client_credentials.load_from_dict({
-            ('coaps://{}:5684/*'.format(gateway_ip)) : {
-                'dtls':  {
+            ('coaps://{}:5684/*'.format(gateway_ip)): {
+                'dtls': {
                     'psk': security_code.encode(),
                     'client-identity': b"Client_identity"
                 }
@@ -62,7 +63,7 @@ class IkeaTradfriPlugin(
         payload = json.dumps(payload)
 
         uri = 'coaps://{}:5684/{}'.format(gateway_ip, "15011/9063")
-        req = aiocoap.Message(code=aiocoap.Code.POST, uri= uri, payload=payload.encode())
+        req = aiocoap.Message(code=aiocoap.Code.POST, uri=uri, payload=payload.encode())
 
         try:
             response = await context.request(req).response
@@ -97,7 +98,6 @@ class IkeaTradfriPlugin(
         self._settings.save()
         self._logger.debug('Settings saved')
 
-
     def run_gateway_get_request(self, path):
         res = self.pool.submit(asyncio.run, self._run_gateway_get_request(path)).result()
         return res
@@ -126,7 +126,7 @@ class IkeaTradfriPlugin(
             }
         })
 
-        #self._logger.debug(api)
+        # self._logger.debug(api)
 
         req = aiocoap.Message(code=aiocoap.Code.GET, uri=uri)
 
@@ -282,7 +282,7 @@ class IkeaTradfriPlugin(
             devices=self.devices,
             status=self.status,
             shutdownAt=self.shutdownAt,
-            hasPalette2= 'palette2' in self._plugin_manager.enabled_plugins
+            hasPalette2='palette2' in self._plugin_manager.enabled_plugins
         )
 
     # ~~ AssetPlugin mixin
@@ -323,11 +323,55 @@ class IkeaTradfriPlugin(
             state=self.getStateData()
         )
 
-    def planStop(self, dev, delay):
+    def planStop(self, dev, force_postpone=False):
         if dev['id'] in self.stopTimer and self.stopTimer[dev['id']] is not None:
             self.stopTimer[dev['id']].cancel()
+            self.stopTimer[dev['id']] = None
 
+        if dev['id'] in self.stopCooldown and self.stopCooldown[dev['id']] is not None:
+            self.stopCooldown[dev['id']].cancel()
+            self.stopCooldown[dev['id']] = None
+
+        if dev['turn_off_mode'] == "time" or force_postpone:
+            delay = int(dev['stop_timer'])
+            if force_postpone:
+                delay = int(dev['postpone_delay'])
+
+            self.planStopTimeMode(dev, delay)
+        else:
+            self.planStopCooldown(dev)
+
+    def planStopCooldown(self, dev):
+
+        hotend_request = int(dev['cooldown_hotend'])
+        bed_request = int(dev['cooldown_bed'])
+
+        def wrapper():
+            temps = self._printer.get_current_temperatures()
+
+            ready_for_stop = True
+
+            if bed_request > -1 and temps['bed']['actual'] > bed_request:
+                ready_for_stop = False
+            if hotend_request > -1 and 'tool0' in temps and temps['tool0']['actual'] > hotend_request:
+                ready_for_stop = False
+
+            if ready_for_stop:
+                self.turnOff(dev)
+                self.stopCooldown[dev['id']] = None
+            else:
+                self.stopCooldown[dev['id']] = threading.Timer(5, wrapper)
+                self.stopCooldown[dev['id']].start()
+            self._send_message("sidebar", self.sidebarInfoData())
+
+        self.stopCooldown[dev['id']] = threading.Timer(5, wrapper)
+        self.stopCooldown[dev['id']].start()
+        self._send_message("sidebar", self.sidebarInfoData())
+
+
+    def planStopTimeMode(self, dev, delay):
         now = math.ceil(time.time())
+
 
         if self.shutdownAt[dev['id']] is not None:
             self.shutdownAt[dev['id']] += delay
@@ -344,13 +388,14 @@ class IkeaTradfriPlugin(
 
         self._send_message("sidebar", self.sidebarInfoData())
 
+
+
     def connect_palette2(self):
         try:
             palette2Plugin = self._plugin_manager.plugins['palette2'].implementation
             palette2Plugin.palette.connectOmega(None)
         except:
             self._logger.error('Failed to connect to palette')
-
 
     def turnOn(self, device):
         if 'type' not in device or device['type'] == 'Outlet':
@@ -386,6 +431,10 @@ class IkeaTradfriPlugin(
         if device['id'] in self.stopTimer and self.stopTimer[device['id']] is not None:
             self.stopTimer[device['id']].cancel()
             self.stopTimer[device['id']] = None
+        if device['id'] in self.stopCooldown and self.stopCooldown[device['id']] is not None:
+            self.stopCooldown[device['id']].cancel()
+            self.stopCooldown[device['id']] = None
+
 
         self._send_message("sidebar", self.sidebarInfoData())
         if self._printer.is_printing():
@@ -460,19 +509,16 @@ class IkeaTradfriPlugin(
             if 'dev' in data:
                 status = self.getStateDataById(data["dev"]['id'])
                 return flask.jsonify(status)
-            elif 'ip' in data: # Octopod ?
+            elif 'ip' in data:  # Octopod ?
                 device = self.getDeviceFromId(int(data['ip']))
                 if device is None:
                     pass
                 else:
                     status = self.getStateDataById(device['id'])
-                    res = dict(ip=str(device['id']), currentState = ("on" if status['state'] else "off"))
+                    res = dict(ip=str(device['id']), currentState=("on" if status['state'] else "off"))
                     return flask.jsonify(res)
             else:
                 self._logger.warn('checkStatus without device data')
-
-
-
 
     def get_additional_permissions(self):
         return [
@@ -491,13 +537,21 @@ class IkeaTradfriPlugin(
     ##Sidebar
 
     def sidebarInfoData(self):
+        # TODO : info stop cooldown
         selected_devices = self._settings.get(['selected_devices'])
+        cooldown_wait = dict()
         for dev in selected_devices:
             if dev['id'] not in self.shutdownAt:
                 self.shutdownAt[dev['id']] = None
+            if dev['turn_off_mode'] == "cooldown":
+                val = None
+                if dev['id'] in self.stopCooldown and self.stopCooldown[dev['id']] is not None:
+                    val = True
+                cooldown_wait[dev['id']] = val
 
         return dict(
-            shutdownAt=self.shutdownAt
+            shutdownAt=self.shutdownAt,
+            cooldown_wait=cooldown_wait
         )
 
     @octoprint.plugin.BlueprintPlugin.route("/sidebar/info", methods=["GET"])
@@ -508,8 +562,7 @@ class IkeaTradfriPlugin(
     @octoprint.plugin.BlueprintPlugin.route("/sidebar/postpone", methods=["POST"])
     def sidebarPostponeShutdown(self):
         dev = flask.request.json['dev']
-        postponeDelay = dev['postpone_delay']
-        self.planStop(dev, postponeDelay)
+        self.planStop(dev, True)
 
         self._send_message("sidebar", self.sidebarInfoData())
 
@@ -518,10 +571,13 @@ class IkeaTradfriPlugin(
     @octoprint.plugin.BlueprintPlugin.route("/sidebar/cancelShutdown", methods=["POST"])
     def sidebarCancelShutdown(self):
         device = flask.request.json['dev']
-        if self.stopTimer[device['id']] is not None:
+        if device['id'] in self.stopTimer and self.stopTimer[device['id']] is not None:
             self.shutdownAt[device['id']] = None
             self.stopTimer[device['id']].cancel()
             self.stopTimer[device['id']] = None
+        if device['id'] in self.stopCooldown and self.stopCooldown[device['id']] is not None:
+            self.stopCooldown[device['id']].cancel()
+            self.stopCooldown[device['id']] = None
         self._send_message("sidebar", self.sidebarInfoData())
         return self.sidebarInfo()
 
@@ -542,8 +598,6 @@ class IkeaTradfriPlugin(
     def get_wizard_version(self):
         return 1
 
-
-
     @octoprint.plugin.BlueprintPlugin.route("/wizard/setOutlet", methods=["POST"])
     def wizardSetOutlet(self):
         if not "selected_outlet" in flask.request.json:
@@ -557,6 +611,9 @@ class IkeaTradfriPlugin(
             connection_timer=5,
             stop_timer=30,
             postpone_delay=30,
+            turn_off_mode="cooldown",
+            cooldown_bed=-1,
+            cooldown_hotend=50,
             on_done=True,
             on_failed=False,
             icon="plug",
@@ -581,7 +638,8 @@ class IkeaTradfriPlugin(
             self.psk = None
 
         try:
-            psk = self.pool.submit(asyncio.run, self._auth(gateway_ip=gateway, security_code=securityCode)).result(timeout=30)
+            psk = self.pool.submit(asyncio.run, self._auth(gateway_ip=gateway, security_code=securityCode)).result(
+                timeout=30)
         except Exception as e:
             self._logger.warn("wizzard : Error on try auth")
         else:
@@ -672,7 +730,8 @@ class IkeaTradfriPlugin(
         if device is None:
             return dict(state=False)
 
-        if device is not None and 'type' in device and device['type'] is not None and device['type'] != "Outlet": #Light
+        if device is not None and 'type' in device and device['type'] is not None and device[
+            'type'] != "Outlet":  # Light
             code = "3311"
 
         data = self.run_gateway_get_request('/15001/{}'.format(device_id))
@@ -692,7 +751,7 @@ class IkeaTradfriPlugin(
             dict(type=msg_type, payload=payload))
 
     def get_settings_version(self):
-        return 4
+        return 5
 
     def on_settings_migrate(self, target, current=None):
         self._logger.info("Update version from {} to {}".format(current, target))
@@ -735,6 +794,16 @@ class IkeaTradfriPlugin(
             if 'connect_palette2' not in dev:
                 dev['connect_palette2'] = False
                 settings_changed = True
+            if 'turn_off_mode' not in dev:
+                dev['turn_off_mode'] = 'time'
+                settings_changed = True
+            if 'cooldown_bed' not in dev:
+                dev['cooldown_bed'] = -1
+                settings_changed = True
+            if 'cooldown_hotend' not in dev:
+                dev['cooldown_hotend'] = 50
+                settings_changed = True
+
         self._settings.set(['selected_devices'], selected_devices)
         if settings_changed:
             self._settings.save()
@@ -748,8 +817,14 @@ class IkeaTradfriPlugin(
             if event == 'PrintFailed' and dev['on_failed']:
                 schedule_stop = True
             if schedule_stop:
-                stop_timer = int(dev['stop_timer'])
-                self.planStop(dev, stop_timer)
+                self.planStop(dev)
+            elif event == 'PrintStarted':
+                if dev['id'] in self.stopTimer and self.stopTimer[dev['id']] is not None:
+                    self.stopTimer[dev['id']].cancel()
+                    self.stopTimer[dev['id']] = None
+                if dev['id'] in self.stopCooldown and self.stopCooldown[dev['id']] is not None:
+                    self.stopCooldown[dev['id']].cancel()
+                    self.stopCooldown[dev['id']] = None
 
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py

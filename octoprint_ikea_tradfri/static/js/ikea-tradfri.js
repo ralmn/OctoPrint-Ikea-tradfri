@@ -14,13 +14,13 @@ $(function () {
 
         self.printer = parameters[3];
 
-        console.log(self.printer);
 
         self.wizardDevices = ko.observable([]);
         self.wizardError = ko.observable(null);
 
         self.sidebarInfo = ko.observable({
-            shutdownAt: {}
+            shutdownAt: {},
+            cooldown_wait: {}
         });
 
         self.navInfo = ko.observable({
@@ -54,7 +54,7 @@ $(function () {
         };
 
         self.turnOn = function (dev) {
-           self.command("turnOn", {dev: ko.toJS(dev)});
+            self.command("turnOn", {dev: ko.toJS(dev)});
         };
         self.turnOff = function (dev) {
             self.command("turnOff", {dev: ko.toJS(dev)});
@@ -85,7 +85,6 @@ $(function () {
         };
 
 
-
         self.getWizardDevices = function () {
             return self.wizardDevices;
         }
@@ -103,7 +102,7 @@ $(function () {
             }).done(function (data) {
                 //console.log('done', data);
                 self.wizardDevices(JSON.parse(data));
-                console.log(self.wizardDevices);
+                //console.log(self.wizardDevices);
                 self.wizardError(null);
             }).fail(function (jqXHR, textStatus, errorThrown) {
                 //console.log('error',  jqXHR, textStatus, errorThrown);
@@ -122,7 +121,7 @@ $(function () {
         }
 
         self.onStartupComplete = function (event) {
-            console.log('onStartupComplete', arguments)
+            //console.log('onStartupComplete', arguments)
             $.ajax({
                 url: BASEURL + "plugin/ikea_tradfri/sidebar/info",
                 type: "GET",
@@ -137,9 +136,9 @@ $(function () {
         }
 
         self.onSidebarInfo = function (data) {
-            //console.log("onSidebarInfo ==>", data)
+            console.log("onSidebarInfo ==>", data)
             self.sidebarInfo(data);
-            //console.log("onSidebarInfo <== ", self.sidebarInfo())
+            // console.log("onSidebarInfo <== ", self.sidebarInfo())
         };
 
         self.sidebarShutdownAt = function (dev) {
@@ -148,6 +147,10 @@ $(function () {
 
         self.sidebarInfoShutdownPlanned = function (dev) {
             return self.sidebarInfo() && self.sidebarInfo().shutdownAt[dev.id()] != null
+        }
+
+        self.sidebarInfoCooldownPlanned = function(dev){
+            return self.sidebarInfo() && self.sidebarInfo().cooldown_wait[dev.id()] != null
         }
 
         self.postponeShutdown = function () {
@@ -244,6 +247,12 @@ $(function () {
             dialog.find('[name="nav_name"]').prop('checked', device.nav_name());
             dialog.find('[name="connect_palette2"]').prop('checked', device.connect_palette2 && device.connect_palette2());
 
+            dialog.find('[name="turn_off_mode"]').val(device.turn_off_mode());
+            dialog.find('[name="cooldown_bed"]').val(device.cooldown_bed());
+            dialog.find('[name="cooldown_hotend"]').val(device.cooldown_hotend());
+
+            self.dialogOnTurnOffModeChange();
+
             dialog.modal();
             self.deviceIdEdit(device.id());
         }
@@ -267,8 +276,14 @@ $(function () {
             dialog.find('[name="nav_icon"]').prop('checked', true);
             dialog.find('[name="nav_name"]').prop('checked', false);
             let connect_palette2 = dialog.find('[name="connect_palette2"]');
-            if(connect_palette2)
+            if (connect_palette2)
                 connect_palette2.prop('checked', false);
+
+            dialog.find('[name="turn_off_mode"]').val('cooldown');
+            dialog.find('[name="cooldown_bed"]').val(-1);
+            dialog.find('[name="cooldown_hotend"]').val(50);
+
+            self.dialogOnTurnOffModeChange();
 
             dialog.modal();
         }
@@ -285,10 +300,13 @@ $(function () {
                 connection_timer: parseInt(dialog.find('[name="connection_timer"]').val()),
                 icon: dialog.find('[name="icon"]').val(),
                 nav_icon: dialog.find('[name="nav_icon"]').prop('checked'),
-                nav_name: dialog.find('[name="nav_name"]').prop('checked')
+                nav_name: dialog.find('[name="nav_name"]').prop('checked'),
+                turn_off_mode: dialog.find('[name="turn_off_mode"]').val(),
+                cooldown_bed: dialog.find('[name="cooldown_bed"]').val(),
+                cooldown_hotend: dialog.find('[name="cooldown_hotend"]').val()
             };
             let connect_palette2 = dialog.find('[name="connect_palette2"]');
-            if(connect_palette2) {
+            if (connect_palette2) {
                 device.connect_palette2 = connect_palette2.prop('checked');
             }
 
@@ -300,23 +318,34 @@ $(function () {
                     device: device
                 }),
                 contentType: "application/json; charset=UTF-8"
-            }).then((data) =>{
+            }).then((data) => {
                 let deviceObs = {}
-                for(let key in device){
+                for (let key in device) {
                     deviceObs[key] = ko.observable(device[key]);
                 }
-                if(currentDevice){
+                if (currentDevice) {
                     self.settings.settings.plugins.ikea_tradfri.selected_devices.replace(currentDevice, deviceObs);
-                    if(currentDevice.nav_icon() != deviceObs.nav_icon() || currentDevice.nav_name() != deviceObs.nav_name()){
+                    if (currentDevice.nav_icon() != deviceObs.nav_icon() || currentDevice.nav_name() != deviceObs.nav_name()) {
                         self.reloadRequired(true);
                     }
-                }else{
+                } else {
                     self.settings.settings.plugins.ikea_tradfri.selected_devices.push(deviceObs);
                 }
 
             });
 
             dialog.modal('hide');
+
+        }
+
+        self.dialogOnTurnOffModeChange = function () {
+            let dialog = $('#ikea_tradfri_device_modal');
+            const timeMode = dialog.find('[name="turn_off_mode"]').val() === "time";
+
+            $('#plugins_ikea_tradfri_grp_cooldown_bed')[timeMode ? 'hide' : 'show'](); // TODO : c'est moche... faudra voir a changer ça
+            $('#plugins_ikea_tradfri_grp_cooldown_hotend')[timeMode ? 'hide' : 'show']();
+            $('#plugins_ikea_tradfri_grp_stop_timer')[timeMode ? 'show' : 'hide']();
+            //$('#plugins_ikea_tradfri_grp_postpone_delay')[timeMode ? 'show' : 'hide']();
 
         }
 
@@ -332,7 +361,7 @@ $(function () {
                     device_id: deviceId
                 }),
                 contentType: "application/json; charset=UTF-8"
-            }).then((data) =>{
+            }).then((data) => {
                 self.settings.settings.plugins.ikea_tradfri.selected_devices.remove(device)
             });
             return true;
@@ -341,8 +370,7 @@ $(function () {
     }
 
 
-
-    if(ko.bindingHandlers['let'] == null) {
+    if (ko.bindingHandlers['let'] == null) {
         ko.bindingHandlers['let'] = {
             init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
                 var innerContext = bindingContext.extend(valueAccessor);
