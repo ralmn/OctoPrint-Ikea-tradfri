@@ -212,7 +212,7 @@ class IkeaTradfriPlugin(
             for i in range(len(devices)):
                 dev = self.run_gateway_get_request(
                     '15001/{}'.format(devices[i]))
-                if '3312' in dev:  # TODO : Add light
+                if '3312' in dev:
                     self.devices.append(dict(id=devices[i], name=dev['9001'], type="Outlet"))
                 elif '3311' in dev:  # Lights
                     self.devices.append(dict(id=devices[i], name=dev['9001'], type="Light"))
@@ -426,12 +426,11 @@ class IkeaTradfriPlugin(
         return None
 
     def on_api_command(self, command, data):
-        # TODO : multi outlet
         import flask
         if command == "turnOn":
             if 'dev' in data:
                 self.turnOn(data['dev'])
-            elif 'ip' in data: # Octopod ?
+            elif 'ip' in data:  # Octopod ?
                 device = self.getDeviceFromId(int(data['ip']))
                 if device is None:
                     pass
@@ -445,7 +444,7 @@ class IkeaTradfriPlugin(
         elif command == "turnOff":
             if 'dev' in data:
                 self.turnOff(data['dev'])
-            elif 'ip' in data: # Octopod ?
+            elif 'ip' in data:  # Octopod ?
                 device = self.getDeviceFromId(int(data['ip']))
                 if device is None:
                     pass
@@ -503,13 +502,11 @@ class IkeaTradfriPlugin(
 
     @octoprint.plugin.BlueprintPlugin.route("/sidebar/info", methods=["GET"])
     def sidebarInfo(self):
-        # TODO multi timer
         data = self.sidebarInfoData()
         return flask.make_response(json.dumps(data), 200)
 
     @octoprint.plugin.BlueprintPlugin.route("/sidebar/postpone", methods=["POST"])
     def sidebarPostponeShutdown(self):
-        # TODO multi timer
         dev = flask.request.json['dev']
         postponeDelay = dev['postpone_delay']
         self.planStop(dev, postponeDelay)
