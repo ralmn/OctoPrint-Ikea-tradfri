@@ -717,6 +717,8 @@ class IkeaTradfriPlugin(
 
         selected_devices = self._settings.get(['selected_devices'])
         for device in selected_devices:
+            if 'id' not in device or device['id'] is None:
+                continue
             res[device['id']] = self.getStateDataById(device['id'])
 
         return res
