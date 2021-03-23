@@ -46,6 +46,11 @@ class IkeaTradfriPlugin(
     stopCooldown = dict()
     pool = concurrent.futures.ThreadPoolExecutor()
 
+    def __init__(self):
+        self.mqtt_publish = lambda *args, **kwargs: None
+        self.mqtt_subscribe = lambda *args, **kwargs: None
+        self.mqtt_unsubscribe = lambda *args, **kwargs: None
+
     async def _auth(self, gateway_ip, security_code):
         context = await aiocoap.Context.create_client_context()
         # context.log.setLevel(level="DEBUG")
@@ -190,13 +195,16 @@ class IkeaTradfriPlugin(
             self._logger.error(e)
         else:
             self._logger.debug('Result: %s\n%r' % (response.code, response.payload))
-            try:
-                resPayload = json.loads(response.payload)
-            except ValueError as e:
-                self._logger.error("Failed to parse auth response")
-                self._logger.error(e)
+            if response.payload:
+                try:
+                    resPayload = json.loads(response.payload)
+                except ValueError as e:
+                    self._logger.error("Failed to parse auth response")
+                    self._logger.error(e)
+                else:
+                    return resPayload
             else:
-                return resPayload
+                return dict()
 
         return None
 
@@ -234,7 +242,60 @@ class IkeaTradfriPlugin(
         self.loadDevices()
 
     def on_after_startup(self):
+
+        helpers = self._plugin_manager.get_helpers("mqtt", "mqtt_publish", "mqtt_subscribe", "mqtt_unsubscribe")
+        if helpers:
+            if 'mqtt_publish' in helpers:
+                self.mqtt_publish = helpers['mqtt_publish']
+            if 'mqtt_subscribe' in helpers:
+                self.mqtt_subscribe = helpers['mqtt_subscribe']
+            if 'mqtt_unsubscribe' in helpers:
+                self.mqtt_unsubscribe = helpers['mqtt_unsubscribe']
+
+            if 'mqtt' in self._plugin_manager.enabled_plugins:
+                mqttPlugin = self._plugin_manager.plugins['mqtt'].implementation
+                if mqttPlugin:
+                    self.baseTopic = mqttPlugin._settings.get(['publish', 'baseTopic'])
+
+        if self.baseTopic:
+            self._logger.info('Enable MQTT')
+            self.mqtt_subscribe('%s%s' % (self.baseTopic, 'plugin/ikea_tradfri/#'), self.on_mqtt_sub)
+
         self.loadDevices(startup=True)
+        self.getStateData()
+
+    def on_mqtt_sub(self, topic, message, retain=None, qos=None, *args, **kwargs):
+        self._logger.debug("Receive mqtt message %s" % (topic))
+        if self.baseTopic is None:
+            return
+
+        if topic == '%s%s%s' % (self.baseTopic, 'plugin/ikea_tradfri/', 'turnOn'):
+            self._logger.info('MQTT request turn on : %s', message)
+            payload = json.loads(message)
+            if 'id' in payload:
+                dev = self.getDeviceFromId(payload['id'])
+                if dev is not None:
+                    self._logger.info('MQTT turn on : %s', dev['name'])
+                    self.turnOn(dev)
+
+
+        elif topic == '%s%s%s' % (self.baseTopic, 'plugin/ikea_tradfri/', 'turnOff'):
+            self._logger.info('MQTT request turn off : %s', message)
+            payload = json.loads(message)
+            if 'id' in payload:
+                dev = self.getDeviceFromId(payload['id'])
+                if dev is not None:
+                    self._logger.info('MQTT turn off : %s', dev['name'])
+                    self.turnOff(dev)
+        elif topic == '%s%s%s' % (self.baseTopic, 'plugin/ikea_tradfri/', 'state'):
+            self.getStateData()
+
+    def mqtt_publish_ikea(self, topic, payload):
+        if self.baseTopic is None:
+            return
+
+        self.mqtt_publish('%s%s%s' % (self.baseTopic, 'plugin/ikea_tradfri/', topic), payload)
+
 
     # ~~ SettingsPlugin mixin
 
@@ -720,6 +781,8 @@ class IkeaTradfriPlugin(
             if 'id' not in device or device['id'] is None:
                 continue
             res[device['id']] = self.getStateDataById(device['id'])
+            self.mqtt_publish_ikea('state/%s' % (device['id']), res[device['id']])
+
 
         return res
 
@@ -732,8 +795,7 @@ class IkeaTradfriPlugin(
         if device is None:
             return dict(state=False)
 
-        if device is not None and 'type' in device and device['type'] is not None and device[
-            'type'] != "Outlet":  # Light
+        if device is not None and 'type' in device and device['type'] is not None and device['type'] != "Outlet":  # Light
             code = "3311"
 
         data = self.run_gateway_get_request('/15001/{}'.format(device_id))
