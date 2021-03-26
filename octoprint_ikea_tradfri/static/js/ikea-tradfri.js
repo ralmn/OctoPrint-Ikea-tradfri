@@ -121,22 +121,30 @@ $(function () {
         }
 
         self.onStartupComplete = function (event) {
-            //console.log('onStartupComplete', arguments)
+            self.getSideBarInfo();
+            self.getNavbarInfo();
+            setInterval(self.getNavbarInfo, 60 * 1000);
+
+        }
+
+        self.getSideBarInfo = function(){
             $.ajax({
                 url: BASEURL + "plugin/ikea_tradfri/sidebar/info",
                 type: "GET",
                 dataType: "json"
             }).done(self.onSidebarInfo);
-            $.ajax({
+        };
+
+        self.getNavbarInfo = function(){
+           $.ajax({
                 url: BASEURL + "plugin/ikea_tradfri/navbar/info",
                 type: "GET",
                 dataType: "json"
             }).done(self.navInfo);
-
-        }
+        };
 
         self.onSidebarInfo = function (data) {
-            console.log("onSidebarInfo ==>", data)
+            //console.log("onSidebarInfo ==>", data)
             self.sidebarInfo(data);
             // console.log("onSidebarInfo <== ", self.sidebarInfo())
         };
