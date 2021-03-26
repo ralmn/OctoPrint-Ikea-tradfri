@@ -374,6 +374,17 @@ class IkeaTradfriPlugin(
                 repo="OctoPrint-Ikea-tradfri",
                 current=self._plugin_version,
 
+                stable_branch=dict(
+                    name="Stable", branch="master", comittish=["master"]
+                ),
+                prerelease_branches=[
+                    dict(
+                        name="Unstable / Develop",
+                        branch="develop",
+                        comittish=["develop", "master"],
+                    )
+                ],
+
                 # update method: pip
                 pip="https://github.com/ralmn/OctoPrint-Ikea-tradfri/archive/{target_version}.zip"
             )
