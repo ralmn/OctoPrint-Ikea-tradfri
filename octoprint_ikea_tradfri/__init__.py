@@ -45,6 +45,8 @@ class IkeaTradfriPlugin(
     stopTimer = dict()
     stopCooldown = dict()
     pool = concurrent.futures.ThreadPoolExecutor()
+    baseTopic = None
+
 
     def __init__(self):
         self.mqtt_publish = lambda *args, **kwargs: None
