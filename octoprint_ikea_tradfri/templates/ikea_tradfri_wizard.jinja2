@@ -8,14 +8,14 @@
         <div class="control-group">
             <label class="control-label">{{ _('Ikea Gateway IP') }}</label>
             <div class="controls">
-                <input type="text" class="input-block-level"  id="wizardIkeaTradfriGateway" data-bind="value: settings.settings.plugins.ikea_tradfri.gateway_ip">
+                <input type="text" class="input-block-level" name="gateway_ip" autocomplete="off"  id="wizardIkeaTradfriGateway" data-bind="value: settings.settings.plugins.ikea_tradfri.gateway_ip">
             </div>
         </div>
 
         <div class="control-group">
             <label class="control-label">{{ _('Ikea Gateway security code') }}</label>
             <div class="controls">
-                <input type="password" class="input-block-level"  id="wizardIkeaTradfriSecurityCode" data-bind="value: settings.settings.plugins.ikea_tradfri.security_code">
+                <input type="password" class="input-block-level" name="security_code" autocomplete="off"  id="wizardIkeaTradfriSecurityCode" data-bind="value: settings.settings.plugins.ikea_tradfri.security_code">
             </div>
         </div>
 

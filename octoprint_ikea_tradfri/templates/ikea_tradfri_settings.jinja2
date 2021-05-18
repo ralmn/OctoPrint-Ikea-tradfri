@@ -2,18 +2,18 @@
     <div data-bind="visible: settings.loginState.hasPermission(settings.access.permissions.PLUGIN_IKEA_TRADFRI_ADMIN)">
         <h1>{{ _("General configuration") }}</h1>
 
-        <form class="form-horizontal">
+        <form class="form-horizontal" autocomplete="off">
             <div class="control-group">
                 <label class="control-label">{{ _('Ikea Gateway IP') }}</label>
                 <div class="controls">
-                    <input type="text" class="input-block-level"
+                    <input type="text" class="input-block-level" autocomplete="off" name="gateway_ip"
                            data-bind="value: settings.settings.plugins.ikea_tradfri.gateway_ip">
                 </div>
             </div>
             <div class="control-group">
                 <label class="control-label">{{ _('Ikea Gateway Security Code') }}</label>
                 <div class="controls">
-                    <input type="password" class="input-block-level"
+                    <input type="password" autocomplete="off" class="input-block-level" name="security_code"
                            data-bind="value: settings.settings.plugins.ikea_tradfri.security_code">
                 </div>
             </div>
