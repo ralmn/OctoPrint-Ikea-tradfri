@@ -375,6 +375,7 @@ class IkeaTradfriPlugin(
                 user="ralmn",
                 repo="OctoPrint-Ikea-tradfri",
                 current=self._plugin_version,
+                prerelease=True,
 
                 stable_branch=dict(
                     name="Stable", branch="master", comittish=["master"]
@@ -520,6 +521,9 @@ class IkeaTradfriPlugin(
         elif self._printer.is_cancelling():
             self._logger.warn("Don't turn off outlet because printer is cancelling !")
             return
+
+        if not f('connect_palette2' in device and device['connect_palette2']):
+            self._printer.disconnect()
 
         self._logger.debug('stop')
         if 'type' not in device or device['type'] == 'Outlet':
