@@ -522,7 +522,7 @@ class IkeaTradfriPlugin(
             self._logger.warn("Don't turn off outlet because printer is cancelling !")
             return
 
-        if not f('connect_palette2' in device and device['connect_palette2']):
+        if not 'connect_palette2' in device and device['connect_palette2']:
             self._printer.disconnect()
 
         self._logger.debug('stop')
