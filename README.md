@@ -1,5 +1,12 @@
 # OctoPrint-Ikea-tradfri
 
+# Important Notice: Plugin Discontinued
+
+This plugin is no longer maintained. 
+DO NOT INSTALL THIS PLUGIN !
+
+---
+
 Turn on your printer with Ikea Tradfri Outlet.
 
 ## Requirements
